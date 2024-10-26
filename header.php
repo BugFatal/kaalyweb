@@ -8,9 +8,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Ajouter dans le <head> de votre fichier -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-<link rel="stylesheet" href="public/css/modern-theme.css?v=<?php echo time(); ?>">
-<link rel="stylesheet" href="public/css/challenge3.css?v=<?php echo time(); ?>">
-<link rel="stylesheet" href="public/css/badges.css?v=<?php echo time(); ?>">
+<link rel="preload" href="public/css/vindigni.css?v=<?php echo time(); ?>" as="style" onload="this.onload=null;this.rel='stylesheet'">
+
     <style>
         body {
             padding-top: 56px;
@@ -49,7 +48,19 @@
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
     <div class="container">
-        <a class="navbar-brand" href="index.php">Tables de Multiplication</a>
+        <?php if (isset($_COOKIE['SSOwAuthUser'])): ?>
+            <span class="navbar-brand">
+                🔨thérapie pour <?php echo htmlspecialchars($_COOKIE['SSOwAuthUser']); ?>
+            </span>
+            <form class="d-inline-block ms-2" action="logout.php" method="POST">
+                <button type="submit" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </button>
+            </form>
+        <?php else: ?>
+            <a class="navbar-brand" href="index.php">🔨thérapie</a>
+        <?php endif; ?>
+        
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -62,11 +73,11 @@
                     <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'practice.php' ? 'active' : ''; ?>" href="practice.php">Entraînement</a>
                 </li>
                 <li class="nav-item">
-    <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'challenge.php' ? 'active' : ''; ?>" href="challenge.php">Challenge</a>
-</li>
-<li class="nav-item">
-    <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'progress.php' ? 'active' : ''; ?>" href="progress.php">Progression</a>
-</li>
+                    <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'challenge.php' ? 'active' : ''; ?>" href="challenge.php">Challenge</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'progress.php' ? 'active' : ''; ?>" href="progress.php">Progression</a>
+                </li>
             </ul>
         </div>
     </div>

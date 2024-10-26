@@ -1,140 +1,123 @@
 <?php
 session_start();
-require_once 'config.php';  // S'assurer que la configuration est chargée
+require_once 'config.php';
 require_once 'badges-config.php';
-// Configuration du jeu
-$GAME_DURATION = 120; // 1 minute en secondes
-$POINTS_BASE = 100;   // Points de base pour une bonne réponse
-$TIME_BONUS = 50;     // Points bonus par seconde restante
-$STREAK_BONUS = 50;   // Points bonus par réponse consécutive correcte
 
-// Récupération de l'identifiant de l'utilisateur
-$user_id = $_COOKIE['SSOwAuthUser'] ?? 'anonymous';
-if (empty($user_id) || $user_id === null) {
-    error_log("SSOwAuthUser non trouvé dans les cookies de session");
+// Définir un état "isEnding" dans la session pour le contrôle côté serveur
+if (!isset($_SESSION['isEnding'])) {
+    $_SESSION['isEnding'] = false;
+}
+
+// Configuration du jeu
+$GAME_DURATION = 10; // 10 secondes pour les tests
+$POINTS_BASE = 100;
+$TIME_BONUS = 50;
+$STREAK_BONUS = 50;
+
+// Récupération de l'identifiant utilisateur
+$user_id = $_COOKIE['SSOwAuthUser'] ?? 'anonymous_' . uniqid();
+if (empty($user_id)) {
     $user_id = 'anonymous_' . uniqid();
 }
 
+// Initialisation de la session de jeu
+function initGameSession() {
+    $_SESSION['game_state'] = [
+        'start_time' => time(),
+        'score' => 0,
+        'questions_answered' => 0,
+        'correct_answers' => 0,
+        'current_streak' => 0,
+        'best_streak' => 0,
+        'game_ended' => false
+    ];
+}
 
-// Fonction pour vérifier si le temps de jeu est dépassé
+// Vérifier si le temps de jeu est dépassé
 function isGameTimeExceeded() {
     global $GAME_DURATION;
-    
-    if (!isset($_SESSION['game_state']) || !isset($_SESSION['game_state']['start_time'])) {
-        error_log("Session ou temps de démarrage non définis - Initialisation d'une nouvelle session");
-        initGameSession();  // Initialiser une nouvelle session si nécessaire
-        return false;  // Permettre le début du jeu
-    }
-    
     $elapsed_time = time() - $_SESSION['game_state']['start_time'];
-    error_log("Temps écoulé: $elapsed_time secondes");
     return $elapsed_time > $GAME_DURATION;
 }
-// Initialiser la session de jeu
-initGameSession();
 
-// Désactiver l'affichage des erreurs pour les requêtes AJAX
-if (isset($_POST['action'])) {
-    error_reporting(0);
-    ini_set('display_errors', 0);
+// Gérer les réponses des joueurs
+function handleAnswer($data) {
+    global $POINTS_BASE, $TIME_BONUS, $STREAK_BONUS;
+
+    if ($_SESSION['game_state']['game_ended']) {
+        return ['success' => false, 'error' => 'Game already ended'];
+    }
+
+    if (isGameTimeExceeded()) {
+        return endGame();
+    }
+
+    $userAnswer = (int)$data['answer'];
+    $correctAnswer = (int)$data['number'] * (int)$data['multiplier'];
+    $isCorrect = $userAnswer === $correctAnswer;
+
+    // Calculer les points
+    $points = 0;
+    if ($isCorrect) {
+        $points = $POINTS_BASE;
+        $points += max(0, $TIME_BONUS * (5 - (int)$data['timeSpent']));
+        if ($_SESSION['game_state']['current_streak'] > 0) {
+            $points += $STREAK_BONUS * $_SESSION['game_state']['current_streak'];
+        }
+        $_SESSION['game_state']['correct_answers']++;
+        $_SESSION['game_state']['current_streak']++;
+        $_SESSION['game_state']['best_streak'] = max(
+            $_SESSION['game_state']['best_streak'],
+            $_SESSION['game_state']['current_streak']
+        );
+    } else {
+        $_SESSION['game_state']['current_streak'] = 0;
+    }
+
+    $_SESSION['game_state']['score'] += $points;
+    $_SESSION['game_state']['questions_answered']++;
+
+    return [
+        'success' => true,
+        'isCorrect' => $isCorrect,
+        'points' => $points,
+        'totalScore' => $_SESSION['game_state']['score']
+    ];
 }
-
-
 
 // Traitement des requêtes AJAX
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    require_once 'config.php';
-    require_once 'badges-config.php';
-    
     header('Content-Type: application/json');
-    
+
     try {
-        $response = [
-            'success' => false,
-            'error' => null,
-            'message' => null
-        ];
-        
         switch ($_POST['action']) {
             case 'submit_answer':
                 $response = handleAnswer($_POST);
                 break;
-                
             case 'end_game':
                 $response = endGame();
                 break;
-                
             default:
-                $response['error'] = 'invalid_action';
-                $response['message'] = 'Action non valide';
+                throw new Exception("Action non valide");
         }
-        
         echo json_encode($response);
-        exit;
     } catch (Exception $e) {
-        echo json_encode([
-            'success' => false,
-            'error' => 'server_error',
-            'message' => $e->getMessage()
-        ]);
-        exit;
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
+    exit;
 }
-
-
-// Le reste du code PHP pour l'affichage de la page...
-require_once 'config.php';
-require_once 'badges-config.php';
-
-
-
-
-// Initialisation de la session de jeu si nouvelle partie
-function initGameSession() {
-    if (!isset($_SESSION['game_state']) || isset($_GET['new_game'])) {
-        $_SESSION['game_state'] = [
-            'active' => true,
-            'start_time' => time(),
-            'score' => 0,
-            'questions_answered' => 0,
-            'correct_answers' => 0,
-            'current_streak' => 0,
-            'best_streak' => 0,
-            'difficulty' => $_GET['difficulty'] ?? 'easy',
-            'initialized' => true // Nouveau flag
-        ];
-        
-        error_log("Nouvelle session initialisée: " . json_encode($_SESSION['game_state']));
-        return true;
-    }
-    return false;
-}
-    
-    // Si c'est une requête AJAX pour une nouvelle partie
-    if (isset($_GET['new_game']) && isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => true,
-            'message' => 'Session réinitialisée'
-        ]);
-        exit;
-    }
 
 // Récupération du défi quotidien
-$stmt = $pdo->prepare("
-    SELECT * FROM daily_challenges 
-    WHERE challenge_date = CURDATE()
-");
+$stmt = $pdo->prepare("SELECT * FROM daily_challenges WHERE challenge_date = CURDATE()");
 $stmt->execute();
 $dailyChallenge = $stmt->fetch();
 
 if (!$dailyChallenge) {
-    // Création d'un nouveau défi quotidien si aucun n'existe
+    // Créer un nouveau défi quotidien si aucun n'existe
     $difficulties = ['easy', 'medium', 'hard'];
     $randomDifficulty = $difficulties[array_rand($difficulties)];
     $stmt = $pdo->prepare("
-        INSERT INTO daily_challenges 
-        (challenge_date, target_score, difficulty, time_limit, description)
+        INSERT INTO daily_challenges (challenge_date, target_score, difficulty, time_limit, description)
         VALUES (CURDATE(), ?, ?, ?, ?)
     ");
     $stmt->execute([
@@ -143,386 +126,21 @@ if (!$dailyChallenge) {
         120, // Temps limite
         "Défi du jour : Obtenez le meilleur score possible en 2 minutes!"
     ]);
-    
     $stmt = $pdo->prepare("SELECT * FROM daily_challenges WHERE challenge_date = CURDATE()");
     $stmt->execute();
     $dailyChallenge = $stmt->fetch();
 }
 
-function verifyGameSession() {
-    if (!isset($_SESSION['game_state']) || 
-        !isset($_SESSION['game_state']['initialized']) || 
-        !$_SESSION['game_state']['initialized']) {
-            
-        error_log("Session invalide ou non initialisée");
-        return false;
-    }
-    return true;
-}
-
-/**
- * Vérifie l'état du jeu et initialise une nouvelle session si nécessaire
- * @return bool true si la session est valide, false sinon
- */
-function checkGameState() {
-    if (!isset($_SESSION['game_state'])) {
-        error_log("Session game_state non définie - Initialisation d'une nouvelle session");
-        initGameSession();
-        return false;
-    }
-    
-    if (!isset($_SESSION['game_state']['initialized']) || 
-        !$_SESSION['game_state']['initialized']) {
-        error_log("Session non initialisée correctement");
-        return false;
-    }
-    
-    if (!isset($_SESSION['game_state']['start_time'])) {
-        error_log("Temps de démarrage non défini");
-        return false;
-    }
-    
-    if (!isset($_SESSION['game_state']['active']) || 
-        !$_SESSION['game_state']['active']) {
-        error_log("Session inactive");
-        return false;
-    }
-    
-    // Vérifier que toutes les propriétés nécessaires sont présentes
-    $requiredProperties = [
-        'score',
-        'questions_answered',
-        'correct_answers',
-        'current_streak',
-        'best_streak',
-        'difficulty'
-    ];
-    
-    foreach ($requiredProperties as $prop) {
-        if (!isset($_SESSION['game_state'][$prop])) {
-            error_log("Propriété manquante: $prop");
-            return false;
-        }
-    }
-    
-    return true;
-}
-
-
-
-
-// Fonction pour gérer les réponses
-function handleAnswer($data) {
-    // Vérification de l'état du jeu
-    if (!checkGameState()) {
-        return [
-            'success' => false,
-            'error' => 'invalid_session',
-            'message' => 'Session invalide'
-        ];
-    }
-
-    // Déclarer l'accès aux variables globales
-    global $POINTS_BASE, $TIME_BONUS, $STREAK_BONUS, $GAME_DURATION;
-   
-    error_log("Début handleAnswer - État de la session: " . json_encode($_SESSION['game_state']));
-   
-    // Vérification du temps écoulé
-    if (isGameTimeExceeded()) {
-        error_log("Temps dépassé - start_time: " . $_SESSION['game_state']['start_time'] .
-                  ", current_time: " . time());
-        return [
-            'success' => false,
-            'error' => 'time_exceeded',
-            'message' => 'Le temps de jeu est écoulé'
-        ];
-    }
-   
-    // Validation et conversion des données
-    if (!isset($data['answer']) || !isset($data['number']) || !isset($data['multiplier']) || !isset($data['timeSpent'])) {
-        return [
-            'success' => false,
-            'error' => 'invalid_data',
-            'message' => 'Données manquantes'
-        ];
-    }
-
-    $userAnswer = (int) $data['answer'];
-    $correctAnswer = (int) $data['number'] * (int) $data['multiplier'];
-    $timeSpent = (int) $data['timeSpent'];
-    $isCorrect = ($userAnswer === $correctAnswer);
-   
-    // Calcul des points
-    $points = 0;
-    if ($isCorrect) {
-        try {
-            $points = $POINTS_BASE;
-            // Bonus de temps (plus rapide = plus de points)
-            $points += max(0, $TIME_BONUS * (5 - $timeSpent));
-            // Bonus de série
-            if ($_SESSION['game_state']['current_streak'] > 0) {
-                $points += $STREAK_BONUS * $_SESSION['game_state']['current_streak'];
-            }
-            $_SESSION['game_state']['current_streak']++;
-            $_SESSION['game_state']['best_streak'] = max(
-                $_SESSION['game_state']['best_streak'],
-                $_SESSION['game_state']['current_streak']
-            );
-            $_SESSION['game_state']['correct_answers']++;
-        } catch (Exception $e) {
-            error_log("Erreur lors du calcul des points: " . $e->getMessage());
-            return [
-                'success' => false,
-                'error' => 'calculation_error',
-                'message' => 'Erreur lors du calcul des points'
-            ];
-        }
-    } else {
-        $_SESSION['game_state']['current_streak'] = 0;
-    }
-   
-    // Mise à jour du score
-    try {
-        $_SESSION['game_state']['score'] += $points;
-        $_SESSION['game_state']['questions_answered']++;
-    } catch (Exception $e) {
-        error_log("Erreur lors de la mise à jour du score: " . $e->getMessage());
-        return [
-            'success' => false,
-            'error' => 'update_error',
-            'message' => 'Erreur lors de la mise à jour du score'
-        ];
-    }
-   
-    // Générer la prochaine question
-    try {
-        $nextQuestion = generateQuestion($_SESSION['game_state']['difficulty']);
-    } catch (Exception $e) {
-        error_log("Erreur lors de la génération de la question: " . $e->getMessage());
-        return [
-            'success' => false,
-            'error' => 'question_error',
-            'message' => 'Erreur lors de la génération de la question'
-        ];
-    }
-   
-    // Logger l'état final pour le débogage
-    error_log("Fin handleAnswer - Nouvel état: " . json_encode([
-        'score' => $_SESSION['game_state']['score'],
-        'streak' => $_SESSION['game_state']['current_streak'],
-        'questions' => $_SESSION['game_state']['questions_answered']
-    ]));
-
-    return [
-        'success' => true,
-        'isCorrect' => $isCorrect,
-        'points' => $points,
-        'totalScore' => $_SESSION['game_state']['score'],
-        'streak' => $_SESSION['game_state']['current_streak'],
-        'correctAnswer' => $correctAnswer,
-        'nextQuestion' => $nextQuestion
-    ];
-}
-
-// Fonction pour générer une question
-function generateQuestion($difficulty) {
-    $maxMultiplier = [
-        'easy' => 10,
-        'medium' => 20,
-        'hard' => 30
-    ][$difficulty] ?? 10;
-
-    return [
-        'number' => rand(1, 10),
-        'multiplier' => rand(1, $maxMultiplier)
-    ];
-}
-
-
-function endGame() {
-    global $pdo, $GAME_DURATION;
-    
-    try {
-        // Vérifier que $pdo existe et est une instance de PDO
-        if (!isset($pdo) || !($pdo instanceof PDO)) {
-            error_log("PDO n'est pas initialisé correctement");
-            throw new Exception("Erreur de connexion à la base de données");
-        }
- 
-        // Récupération sécurisée du user_id depuis le cookie SSOwAuthUser
-        $user_id = $_COOKIE['SSOwAuthUser'] ?? null;
-        if (empty($user_id)) {
-            error_log("SSOwAuthUser non trouvé dans les cookies de session pendant endGame");
-            $user_id = 'anonymous_' . uniqid();
-        }
- 
-        // Vérifier l'état de la session
-        if (!isset($_SESSION['game_state'])) {
-            throw new Exception('Aucune partie en cours');
-        }
-        
-        // Récupérer le défi quotidien
-        $stmt = $pdo->prepare("SELECT * FROM daily_challenges WHERE challenge_date = CURDATE()");
-        $stmt->execute();
-        $dailyChallenge = $stmt->fetch();
-        
-        if (!$dailyChallenge) {
-            throw new Exception("Défi quotidien non trouvé");
-        }
- 
-        $gameState = $_SESSION['game_state'];
-        
-        // Vérifier que le temps de jeu est valide
-        $total_time = time() - $gameState['start_time'];
-        if ($total_time > $GAME_DURATION + 5) {
-            $ratio = $GAME_DURATION / $total_time;
-            $gameState['score'] = (int)($gameState['score'] * $ratio);
-        }
-        
-        // Calcul des étoiles
-        $stars = 1;
-        if ($gameState['score'] >= 2000) $stars = 2;
-        if ($gameState['score'] >= 3500) $stars = 3;
-        
-        try {
-            // Début de la transaction
-            $pdo->beginTransaction();
-            
-            // Enregistrement de la tentative du défi quotidien
-            $challenge_completed = $gameState['score'] >= $dailyChallenge['target_score'];
-            $stmt = $pdo->prepare("
-                INSERT INTO daily_challenge_attempts 
-                (user_id, challenge_id, score, completed, attempt_date)
-                VALUES (?, ?, ?, ?, NOW())
-            ");
-            
-            if (!$stmt->execute([
-                $user_id,
-                $dailyChallenge['id'],
-                $gameState['score'],
-                $challenge_completed ? 1 : 0
-            ])) {
-                throw new Exception("Erreur lors de l'insertion de la tentative");
-            }
-            
-            // Préparer les stats pour les badges
-            $stats = [
-                'total_games' => 1,
-                'questions_answered' => $gameState['questions_answered'],
-                'correct_answers' => $gameState['correct_answers'],
-                'total_time' => min($total_time, $GAME_DURATION),
-                'best_streak' => $gameState['best_streak'],
-                'total_score' => $gameState['score'],
-                'is_daily_best' => false,
-                'badges_earned' => 0
-            ];
- 
-            // Vérifier si c'est le meilleur score du jour
-            $stmt = $pdo->prepare("
-                SELECT MAX(score) as max_score 
-                FROM challenge_scores 
-                WHERE user_id = ? AND DATE(date_played) = CURDATE()
-            ");
-            $stmt->execute([$user_id]);
-            $maxScore = $stmt->fetchColumn();
-            $stats['is_daily_best'] = ($gameState['score'] > ($maxScore ?? 0));
-            
-            // Récupérer le classement du jour pour ce défi
-            $stmt = $pdo->prepare("
-                SELECT COUNT(*) as rank_position
-                FROM daily_challenge_attempts
-                WHERE challenge_id = ? AND score > ?
-            ");
-            $stmt->execute([$dailyChallenge['id'], $gameState['score']]);
-            $rank = $stmt->fetchColumn() + 1;
-            
-            // Enregistrement du score général
-            $stmt = $pdo->prepare("
-                INSERT INTO challenge_scores 
-                (user_id, score, questions_answered, correct_answers, time_taken, difficulty, date_played, stars)
-                VALUES (?, ?, ?, ?, ?, ?, NOW(), ?)
-            ");
-            
-            if (!$stmt->execute([
-                $user_id,
-                $gameState['score'],
-                $gameState['questions_answered'],
-                $gameState['correct_answers'],
-                min($total_time, $GAME_DURATION),
-                $gameState['difficulty'],
-                $stars
-            ])) {
-                throw new Exception("Erreur lors de l'insertion du score");
-            }
-            
-            // Vérification et attribution des badges
-            $newBadges = checkAndAwardBadges($user_id, $stats);
-            
-            // Récupération des meilleurs scores
-            $stmt = $pdo->prepare("
-                SELECT user_id, score, date_played 
-                FROM challenge_scores 
-                ORDER BY score DESC 
-                LIMIT 10
-            ");
-            $stmt->execute();
-            $highScores = $stmt->fetchAll();
-            
-            // Validation de la transaction
-            $pdo->commit();
-            
-            // Nettoyage de la session
-            unset($_SESSION['game_state']);
-            
-            return [
-                'success' => true,
-                'finalScore' => $gameState['score'],
-                'stars' => $stars,
-                'questionsAnswered' => $gameState['questions_answered'],
-                'correctAnswers' => $gameState['correct_answers'],
-                'bestStreak' => $gameState['best_streak'],
-                'highScores' => $highScores ?? [],
-                'earnedBadges' => $newBadges ?? [],
-                'dailyChallenge' => [
-                    'completed' => $challenge_completed ?? false,
-                    'targetScore' => $dailyChallenge['target_score'] ?? 0,
-                    'rank' => $rank ?? 1,
-                    'difficulty' => $dailyChallenge['difficulty'] ?? 'easy'
-                ]
-            ];
-            
-        } catch (PDOException $e) {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            error_log("Erreur SQL dans endGame: " . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
-            throw $e;
-        }
-        
-    } catch (Exception $e) {
-        error_log("Erreur dans endGame: " . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
-        
-        // Assurez-vous que toute transaction ouverte est annulée
-        if (isset($pdo) && $pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-        
-        return [
-            'success' => false,
-            'error' => 'game_error',
-            'message' => "Une erreur est survenue lors de la finalisation du jeu",
-            'debug_info' => [
-                'error_message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]
-        ];
-    }
- }
-
-$pageTitle = 'Challenge - Tables de Multiplication';
+// Inclure le fichier header.php
 include 'header.php';
 ?>
+
+<!-- Le reste du code HTML et JavaScript -->
+<!-- Le reste du code HTML et JavaScript -->
+
+<!-- Le reste du code HTML et JavaScript -->
+
+<!-- Le reste du code HTML et JavaScript -->
 
 
 <div class="container">
@@ -683,7 +301,8 @@ let gameState = {
     correctAnswers: 0,
     currentQuestion: null,
     timer: null,
-    questionStartTime: null
+    questionStartTime: null,
+    gameEnded: false // Nouveau drapeau pour indiquer que le jeu est terminé
 };
 
 // Éléments du DOM
@@ -702,7 +321,6 @@ const elements = {
 };
 
 // Initialisation du jeu
-// Dans initGame
 async function initGame() {
     try {
         const response = await fetch('challenge.php?new_game=1', {
@@ -711,15 +329,14 @@ async function initGame() {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         });
-        
         const data = await response.json();
         if (!data.success) {
             throw new Error(data.message || 'Erreur d\'initialisation');
         }
-        
-        // Réinitialiser l'état du jeu avec timeLeft explicitement défini
+
+        // Réinitialiser l'état du jeu
         gameState = {
-            timeLeft: GAME_DURATION,  // S'assure que timeLeft est défini
+            timeLeft: GAME_DURATION,
             score: 0,
             streak: 0,
             bestStreak: 0,
@@ -729,11 +346,10 @@ async function initGame() {
             timer: null,
             questionStartTime: null
         };
-        
+
         updateTimer();
         generateNewQuestion();
         startTimer();
-        
         elements.answer.addEventListener('keyup', handleAnswer);
     } catch (error) {
         console.error('Error initializing game:', error);
@@ -741,23 +357,26 @@ async function initGame() {
     }
 }
 
-
 // Gestion du chronomètre
 function startTimer() {
+    if (gameState.timer) {
+        clearInterval(gameState.timer);
+    }
     gameState.timer = setInterval(() => {
         gameState.timeLeft--;
         updateTimer();
-
-        if (gameState.timeLeft <= 10) {
+        if (gameState.timeLeft <= 10 && !gameState.timerExpired) {
             elements.timer.classList.add('warning');
             SOUNDS.countdown.play();
         }
-
-        if (gameState.timeLeft <= 0) {  // Vérification directe au lieu d'utiliser isGameTimeExceededClient()
+        if (gameState.timeLeft <= 0 && !gameState.gameEnded) {
+            gameState.timerExpired = true;
             endGame();
         }
     }, 1000);
 }
+
+let isEnding = false;
 
 function updateTimer() {
     const minutes = Math.floor(gameState.timeLeft / 60);
@@ -765,18 +384,13 @@ function updateTimer() {
     elements.timer.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
-
-
 // Génération des questions
 async function generateNewQuestion() {
     gameState.questionStartTime = Date.now();
-    
-    // Si une question est déjà définie, l'utiliser
     if (gameState.currentQuestion) {
         elements.number.textContent = gameState.currentQuestion.number;
         elements.multiplier.textContent = gameState.currentQuestion.multiplier;
     } else {
-        // Sinon, en générer une nouvelle
         gameState.currentQuestion = {
             number: Math.floor(Math.random() * 10) + 1,
             multiplier: Math.floor(Math.random() * 10) + 1
@@ -784,7 +398,6 @@ async function generateNewQuestion() {
         elements.number.textContent = gameState.currentQuestion.number;
         elements.multiplier.textContent = gameState.currentQuestion.multiplier;
     }
-    
     elements.answer.value = '';
     elements.answer.focus();
 }
@@ -792,21 +405,17 @@ async function generateNewQuestion() {
 // Gestion des réponses
 async function handleAnswer(e) {
     if (e.key !== 'Enter') return;
-    
     const answerInput = elements.answer.value.trim();
     if (!answerInput) return;
-    
     const userAnswer = parseInt(answerInput);
     const correctAnswer = gameState.currentQuestion.number * gameState.currentQuestion.multiplier;
     const timeSpent = (Date.now() - gameState.questionStartTime) / 1000;
-
     const response = await submitAnswer({
         answer: userAnswer,
         number: gameState.currentQuestion.number,
         multiplier: gameState.currentQuestion.multiplier,
         timeSpent: timeSpent
     });
-
     if (response) {
         handleAnswerResponse(response, correctAnswer);
     }
@@ -819,29 +428,24 @@ async function submitAnswer(answerData) {
         Object.keys(answerData).forEach(key => {
             formData.append(key, answerData[key]);
         });
-
         const response = await fetch('challenge.php', {
             method: 'POST',
             body: formData
         });
-        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
         const data = await response.json();
-        console.log('Réponse du serveur:', data); // Pour débugger
-        
         if (data.error) {
             throw new Error(data.message || 'Erreur serveur');
         }
-        
         return data;
     } catch (error) {
         console.error('Error submitting answer:', error);
         return null;
     }
 }
+
 
 async function submitFinalScore() {
     try {
@@ -868,35 +472,50 @@ async function submitFinalScore() {
 }
 
 function handleAnswerResponse(response, correctAnswer) {
+    writeLog(`Entering handleAnswerResponse() with response: ${JSON.stringify(response)}, correctAnswer: ${correctAnswer}`);
     if (!response || response.error) {
+        writeLog('Response is invalid or has an error');
         if (response?.error === 'time_exceeded') {
-            endGame();
+            if (!gameState.gameEnded) {
+                writeLog('Time has been exceeded, calling endGame()');
+                gameState.gameEnded = true;
+                endGame();
+            } else {
+                writeLog('Game has already ended, not calling endGame() again');
+            }
             return;
         }
-        console.log('Réponse invalide ou erreur:', response);
+        writeLog(`Invalid response or error: ${JSON.stringify(response)}`);
         return;
     }
 
+    writeLog(`Question answered, questions answered: ${gameState.questionsAnswered + 1}`);
     gameState.questionsAnswered++;
-    console.log('isCorrect:', response.isCorrect);
-    
+
+    writeLog(`isCorrect: ${response.isCorrect}`);
+
     if (response.isCorrect) {
+        writeLog('Answer is correct');
         gameState.correctAnswers++;
         gameState.streak++;
         gameState.score += response.points;
         showPointsAnimation(response.points);
         SOUNDS.correct.play();
     } else {
+        writeLog('Answer is incorrect');
         gameState.streak = 0;
         SOUNDS.wrong.play();
         showWrongAnswerAnimation(correctAnswer);
     }
 
+    writeLog(`Current score: ${gameState.score}, streak: ${gameState.streak}, best streak: ${gameState.bestStreak}`);
     updateUI();
 
     // Utiliser la vérification directe
     if (gameState.timeLeft > 0) {
+        writeLog(`Time left: ${gameState.timeLeft} seconds`);
         if (response.nextQuestion) {
+            writeLog('Received next question, updating state');
             gameState.currentQuestion = response.nextQuestion;
             elements.number.textContent = response.nextQuestion.number;
             elements.multiplier.textContent = response.nextQuestion.multiplier;
@@ -904,9 +523,12 @@ function handleAnswerResponse(response, correctAnswer) {
             elements.answer.focus();
             gameState.questionStartTime = Date.now();
         } else {
+            writeLog('Generating new question');
             generateNewQuestion();
         }
     }
+
+    writeLog('Exiting handleAnswerResponse()');
 }
 
 // Animations et effets visuels
@@ -947,46 +569,79 @@ function updateUI() {
     elements.bestStreak.textContent = Math.max(gameState.streak, gameState.bestStreak);
 }
 
+// Fonction pour enregistrer les logs
+function writeLog(message) {
+    console.log(message);
+    // Écrire les logs dans un fichier sur le serveur
+    const logFile = 'logout.log';
+    const logMessage = `[${new Date().toISOString()}] ${message}`;
+    fetch('write_log.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: logMessage })
+    })
+    .catch(error => {
+        console.error('Error writing log:', error);
+    });
+}
+
 // Fin de partie
+// Fin de partie
+// Fin de partie
+// Fin de partie
+
 async function endGame() {
-    clearInterval(gameState.timer);
-    elements.answer.disabled = true;
-    elements.answer.removeEventListener('keyup', handleAnswer);
+    // Vérifier si le jeu est déjà en cours de terminaison
+    if (isEnding || gameState.gameEnded) {
+        return;
+    }
     
     try {
-        const formData = new FormData();
-        formData.append('action', 'end_game');
+        isEnding = true;
         
-        const response = await fetch('challenge.php', {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        // Arrêter immédiatement le timer
+        if (gameState.timer) {
+            clearInterval(gameState.timer);
+            gameState.timer = null;
         }
         
-        const finalData = await response.json();
-        console.log('Réponse finale du serveur:', finalData); // Pour débugger
+        // Marquer le jeu comme terminé
+        gameState.gameEnded = true;
         
-        if (finalData.error) {
-            console.error('Erreur détaillée:', finalData.debug_info); // Log les détails de l'erreur
-            throw new Error(finalData.message || 'Erreur serveur');
+        // Désactiver l'input
+        elements.answer.disabled = true;
+        elements.answer.removeEventListener('keyup', handleAnswer);
+        
+        writeLog('Submitting final score');
+        const response = await submitFinalScore();
+        
+        if (!response) {
+            throw new Error('No response from submitFinalScore()');
         }
-        
-        showGameOverModal(finalData);
-        
-        if (finalData.dailyChallenge?.completed) {
+
+        if (response.error) {
+            throw new Error(response.message || 'Error submitting final score');
+        }
+
+        // Afficher les résultats
+        showGameOverModal(response);
+
+        // Jouer le son approprié
+        if (response.dailyChallenge?.completed && !gameState.dailyChallengeCompleted) {
             new Audio('sounds/success.mp3').play();
-        } else {
+            gameState.dailyChallengeCompleted = true;
+        } else if (gameState.timerExpired && !gameState.gameOverSoundPlayed) {
             SOUNDS.gameOver.play();
+            gameState.gameOverSoundPlayed = true;
         }
+
     } catch (error) {
-        console.error('Erreur complète de fin de partie:', error);
-        console.error('Stack trace:', error.stack);
+        console.error('Error in endGame():', error);
+        writeLog(`Error in endGame(): ${error.message}`);
         
-        alert('Une erreur est survenue lors de la sauvegarde des résultats. Vos scores seront affichés localement.');
-        
+        // Afficher quand même le modal avec les données locales
         showGameOverModal({
             success: true,
             finalScore: gameState.score,
@@ -1003,9 +658,51 @@ async function endGame() {
                 difficulty: 'easy'
             }
         });
+        
+        alert('Une erreur est survenue lors de la sauvegarde des résultats. Vos scores seront affichés localement.');
+    } finally {
+        isEnding = false;
     }
 }
 
+
+
+
+async function submitFinalScore() {
+    try {
+        writeLog('Entering submitFinalScore()');
+        writeLog('Submitting final score to server');
+
+        const formData = new FormData();
+        formData.append('action', 'end_game');
+
+        writeLog('Sending POST request to challenge.php');
+        const response = await fetch('challenge.php', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            writeLog(`HTTP error submitting final score: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        writeLog('Final score submitted successfully');
+        writeLog('Parsing response JSON');
+        const responseData = await response.json();
+        writeLog(`Returning response data: ${JSON.stringify(responseData)}`);
+        writeLog('Exiting submitFinalScore()');
+        return responseData;
+    } catch (error) {
+        writeLog(`Error submitting final score: ${error.message}`);
+        console.error('Error submitting final score:', error);
+        writeLog('Exiting submitFinalScore() with error');
+        return null;
+    }
+}
 
 function showGameOverModal(data) {
     const starsDisplay = document.getElementById('starsEarned');
@@ -1085,25 +782,14 @@ function getOrdinalSuffix(n) {
 // Modifier la fonction startNewGame
 async function startNewGame() {
     try {
-        // Faire une requête au serveur pour réinitialiser la session
-        const response = await fetch('challenge.php?new_game=1', {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Erreur lors de la réinitialisation de la session');
+        // Réinitialiser tous les états
+        if (gameState.timer) {
+            clearInterval(gameState.timer);
+            gameState.timer = null;
         }
         
-        // Réinitialiser l'interface
-        elements.gameOverModal.style.display = 'none';
-        elements.answer.disabled = false;
-        
-        // Réinitialiser l'état du jeu
         gameState = {
-            timeLeft: GAME_DURATION,  // S'assure que timeLeft est défini
+            timeLeft: GAME_DURATION,
             score: 0,
             streak: 0,
             bestStreak: 0,
@@ -1111,16 +797,26 @@ async function startNewGame() {
             correctAnswers: 0,
             currentQuestion: null,
             timer: null,
-            questionStartTime: null
+            questionStartTime: null,
+            gameEnded: false,
+            timerExpired: false,
+            gameOverSoundPlayed: false,
+            dailyChallengeCompleted: false
         };
         
-        // Supprimer l'ancien écouteur d'événements avant d'en ajouter un nouveau
+        // Réinitialiser l'interface
+        elements.gameOverModal.style.display = 'none';
+        elements.answer.disabled = false;
+        elements.answer.value = '';
+        
+        // Réinitialiser les écouteurs d'événements
         elements.answer.removeEventListener('keyup', handleAnswer);
         elements.answer.addEventListener('keyup', handleAnswer);
         
         // Mettre à jour l'interface et démarrer une nouvelle partie
         updateUI();
-        initGame();
+        await initGame();
+        
     } catch (error) {
         console.error('Erreur lors du redémarrage:', error);
         alert('Erreur lors du redémarrage du jeu. Veuillez rafraîchir la page.');

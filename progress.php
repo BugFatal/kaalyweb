@@ -218,7 +218,6 @@ include 'header.php';
     </div>
 </div>
 
-<?php include 'footer.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>

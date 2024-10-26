@@ -6,12 +6,8 @@ error_reporting(E_ALL);
 session_start();
 require_once 'config.php';
 
-// Déterminer si on pratique une table spécifique
-$specificTable = isset($_GET['table']) && is_numeric($_GET['table']) && $_GET['table'] >= 1 && $_GET['table'] <= 10;
-$tableNumber = $specificTable ? (int)$_GET['table'] : null;
-
 // Fonction pour générer une nouvelle question
-function generateQuestion($difficulty, $pdo, $user_id, $specificTable = null) {
+function generateQuestion($difficulty, $pdo, $user_id) {
     $maxMultiplier = [
         'easy' => 10,
         'medium' => 20,
@@ -20,23 +16,16 @@ function generateQuestion($difficulty, $pdo, $user_id, $specificTable = null) {
 
     if (rand(1, 100) <= 31) {
         try {
-            $query = "
+            $stmt = $pdo->prepare("
                 SELECT table_number, multiplier 
                 FROM difficulty_stats 
                 WHERE user_id = ? 
                     AND total_attempts > 0 
-                    AND multiplier <= ?";
-            $params = [$user_id, $maxMultiplier];
-
-            if ($specificTable !== null) {
-                $query .= " AND table_number = ?";
-                $params[] = $specificTable;
-            }
-
-            $query .= " ORDER BY (correct_attempts / total_attempts) ASC LIMIT 5";
-            
-            $stmt = $pdo->prepare($query);
-            $stmt->execute($params);
+                    AND multiplier <= ?
+                ORDER BY (correct_attempts / total_attempts) ASC 
+                LIMIT 5
+            ");
+            $stmt->execute([$user_id, $maxMultiplier]);
             $difficultQuestions = $stmt->fetchAll();
 
             if (!empty($difficultQuestions)) {
@@ -52,37 +41,34 @@ function generateQuestion($difficulty, $pdo, $user_id, $specificTable = null) {
     }
 
     return [
-        'number' => $specificTable ?? rand(1, 10),
+        'number' => rand(1, 10),
         'multiplier' => rand(1, $maxMultiplier)
     ];
 }
 
 function handleError($message) {
     $_SESSION['error_message'] = $message;
-    header('Location: ' . $_SERVER['PHP_SELF'] . (isset($_GET['table']) ? '?table=' . $_GET['table'] : ''));
+    header('Location: practice.php');
     exit();
 }
 
 $user_id = $_SERVER['REMOTE_USER'] ?? 'anonymous';
 
 // Initialisation des variables de session
-$sessionKey = $specificTable ? 'table_' . $tableNumber : 'all_tables';
-if (!isset($_SESSION[$sessionKey])) {
-    $_SESSION[$sessionKey] = [
-        'total' => 0,
-        'correct' => 0,
-        'current_streak' => 0,
-        'best_streak' => 0,
-        'total_sessions' => 0,
-        'total_questions' => 0
-    ];
+if (!isset($_SESSION['total'])) {
+    $_SESSION['total'] = 0;
+    $_SESSION['correct'] = 0;
+    $_SESSION['current_streak'] = 0;
+    $_SESSION['best_streak'] = 0;
+    $_SESSION['total_sessions'] = 0;
+    $_SESSION['total_questions'] = 0;
 }
 
 // Gestion des paramètres de pratique
 $_SESSION['difficulty'] = $_POST['difficulty'] ?? $_SESSION['difficulty'] ?? 'easy';
 
 // Génération d'une nouvelle question
-$question = generateQuestion($_SESSION['difficulty'], $pdo, $user_id, $specificTable ? $tableNumber : null);
+$question = generateQuestion($_SESSION['difficulty'], $pdo, $user_id);
 $number = $question['number'];
 $randomMultiplier = $question['multiplier'];
 
@@ -96,26 +82,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['answer'], $_POST['numb
         $isCorrect = ($userAnswer === $correctAnswer);
 
         if ($isCorrect) {
-            $_SESSION[$sessionKey]['correct']++;
-            $_SESSION[$sessionKey]['current_streak']++;
-            $_SESSION[$sessionKey]['best_streak'] = max($_SESSION[$sessionKey]['current_streak'], $_SESSION[$sessionKey]['best_streak']);
-            $message = "Bonne réponse ! Série actuelle : " . $_SESSION[$sessionKey]['current_streak'];
+            $_SESSION['correct']++;
+            $_SESSION['current_streak']++;
+            $_SESSION['best_streak'] = max($_SESSION['current_streak'], $_SESSION['best_streak']);
+            $message = "Bonne réponse ! Série actuelle : " . $_SESSION['current_streak'];
             $messageClass = "alert-success";
         } else {
-            $_SESSION[$sessionKey]['current_streak'] = 0;
+            $_SESSION['current_streak'] = 0;
             $message = "Mauvaise réponse. La bonne réponse était $correctAnswer.";
             $messageClass = "alert-danger";
         }
 
-        $_SESSION[$sessionKey]['total']++;
-        $_SESSION[$sessionKey]['total_questions']++;
+        $_SESSION['total']++;
+        $_SESSION['total_questions']++;
 
         // Enregistrement dans la base de données
         $stmt = $pdo->prepare("INSERT INTO training_results (user_id, correct_answers, total_questions, difficulty, training_date, table_number, multiplier, is_correct) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?)");
         $stmt->execute([
             $user_id,
-            (int) $_SESSION[$sessionKey]['correct'],
-            (int) $_SESSION[$sessionKey]['total'],
+            (int) $_SESSION['correct'],
+            (int) $_SESSION['total'],
             $_SESSION['difficulty'],
             (int) $_POST['number'],
             (int) $_POST['multiplier'],
@@ -136,8 +122,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['answer'], $_POST['numb
             $isCorrect ? 1 : 0
         ]);
 
-        if ($_SESSION[$sessionKey]['total'] == 1) {
-            $_SESSION[$sessionKey]['total_sessions']++;
+        if ($_SESSION['total'] == 1) {
+            $_SESSION['total_sessions']++;
         }
     } catch (Exception $e) {
         handleError("Une erreur est survenue : " . $e->getMessage());
@@ -146,20 +132,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['answer'], $_POST['numb
 
 // Récupération des statistiques de difficulté
 try {
-    $query = "SELECT table_number, multiplier, total_attempts, correct_attempts 
-             FROM difficulty_stats 
-             WHERE user_id = ?";
-    $params = [$user_id];
-
-    if ($specificTable) {
-        $query .= " AND table_number = ?";
-        $params[] = $tableNumber;
-    }
-
-    $query .= " ORDER BY (correct_attempts / total_attempts) ASC LIMIT 5";
-    
-    $stmt = $pdo->prepare($query);
-    $stmt->execute($params);
+    $stmt = $pdo->prepare("SELECT table_number, multiplier, total_attempts, correct_attempts 
+                         FROM difficulty_stats 
+                         WHERE user_id = ? 
+                         ORDER BY (correct_attempts / total_attempts) ASC 
+                         LIMIT 5");
+    $stmt->execute([$user_id]);
     $difficultyStats = $stmt->fetchAll();
 } catch (Exception $e) {
     $difficultyStats = [];
@@ -167,14 +145,19 @@ try {
     $messageClass = "alert-warning";
 }
 
-$pageTitle = $specificTable ? "Table de $tableNumber - Entraînement" : 'Entraînement - Tables de Multiplication';
+$pageTitle = 'Entraînement - Tables de Multiplication';
 include 'header.php';
 ?>
 
 <div class="container">
-    <h2 class="text-center mb-4">
-        <?php echo $specificTable ? "Entraînement - Table de $tableNumber" : "Entraînement aux Tables de Multiplication"; ?>
-    </h2>
+    <h2 class="text-center mb-4">Entraînement aux Tables de Multiplication</h2>
+
+    <?php
+    if (isset($_SESSION['error_message'])) {
+        echo '<div class="alert alert-danger">' . htmlspecialchars($_SESSION['error_message']) . '</div>';
+        unset($_SESSION['error_message']);
+    }
+    ?>
 
     <div class="row">
         <div class="col-md-8 mx-auto">
@@ -194,15 +177,13 @@ include 'header.php';
                         <div class="alert <?php echo $messageClass; ?>"><?php echo $message; ?></div>
                     <?php endif; ?>
 
-                    <form method="POST" class="mb-4">
+                    <form action="practice.php" method="POST" class="mb-4">
                         <input type="hidden" name="number" value="<?php echo $number; ?>">
                         <input type="hidden" name="multiplier" value="<?php echo $randomMultiplier; ?>">
                         
                         <div class="mb-3">
-                            <label for="answer" class="form-label display-6 text-center w-100">
-                                <?php echo $number; ?> × <?php echo $randomMultiplier; ?> = ?
-                            </label>
-                            <input type="number" id="answer" name="answer" class="form-control form-control-lg text-center" required autofocus>
+                            <label for="answer" class="form-label lead">Combien font <?php echo $number; ?> x <?php echo $randomMultiplier; ?> ?</label>
+                            <input type="number" id="answer" name="answer" class="form-control form-control-lg" required autofocus>
                         </div>
                         <button type="submit" class="btn btn-success btn-lg w-100">Vérifier</button>
                     </form>
@@ -212,10 +193,10 @@ include 'header.php';
                             <div class="card bg-light">
                                 <div class="card-body text-center">
                                     <h5 class="card-title">Progression</h5>
-                                    <p class="card-text">Réponses correctes : <?php echo $_SESSION[$sessionKey]['correct']; ?> / <?php echo $_SESSION[$sessionKey]['total']; ?></p>
+                                    <p class="card-text">Réponses correctes : <?php echo $_SESSION['correct']; ?> / <?php echo $_SESSION['total']; ?></p>
                                     <div class="progress">
                                         <div class="progress-bar bg-success" role="progressbar" 
-                                             style="width: <?php echo $_SESSION[$sessionKey]['total'] > 0 ? ($_SESSION[$sessionKey]['correct'] / $_SESSION[$sessionKey]['total'] * 100) : 0; ?>%">
+                                             style="width: <?php echo $_SESSION['total'] > 0 ? ($_SESSION['correct'] / $_SESSION['total'] * 100) : 0; ?>%">
                                         </div>
                                     </div>
                                 </div>
@@ -224,9 +205,9 @@ include 'header.php';
                         <div class="col-sm-6 mb-3">
                             <div class="card bg-light">
                                 <div class="card-body text-center">
-                                    <h5 class="card-title">Série actuelle</h5>
-                                    <p class="display-4"><?php echo $_SESSION[$sessionKey]['current_streak']; ?></p>
-                                    <p class="text-muted">Meilleure série : <?php echo $_SESSION[$sessionKey]['best_streak']; ?></p>
+                                    <h5 class="card-title">Statistiques globales</h5>
+                                    <p class="card-text">Sessions d'entraînement : <?php echo $_SESSION['total_sessions']; ?></p>
+                                    <p class="card-text">Questions répondues : <?php echo $_SESSION['total_questions']; ?></p>
                                 </div>
                             </div>
                         </div>
@@ -235,11 +216,11 @@ include 'header.php';
                     <?php if (!empty($difficultyStats)): ?>
                     <div class="card bg-light mt-3">
                         <div class="card-body">
-                            <h5 class="card-title"><?php echo $specificTable ? "Multiplications à revoir" : "Vos 5 multiplications les plus difficiles"; ?></h5>
+                            <h5 class="card-title">Vos 5 multiplications les plus difficiles</h5>
                             <ul class="list-group">
                                 <?php foreach ($difficultyStats as $stat): ?>
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <?php echo $stat['table_number'] . ' × ' . $stat['multiplier']; ?>
+                                        <?php echo $stat['table_number'] . ' x ' . $stat['multiplier']; ?>
                                         <span class="badge bg-primary rounded-pill">
                                             <?php echo $stat['correct_attempts'] . ' / ' . $stat['total_attempts']; ?>
                                         </span>
@@ -251,13 +232,8 @@ include 'header.php';
                     <?php endif; ?>
 
                     <div class="text-center mt-3">
-                        <?php if ($specificTable): ?>
-                            <a href="table.php?number=<?php echo $tableNumber; ?>" class="btn btn-info">Voir la table</a>
-                        <?php endif; ?>
                         <a href="progress.php" class="btn btn-info">Voir ma progression détaillée</a>
-                        <div class="text-center mt-3">
-                        <a href="index.php" class="btn btn-primary">Retour à l'accueil</a>
-                        </div>
+                        
                     </div>
                 </div>
             </div>
@@ -311,7 +287,7 @@ include 'header.php';
         </div>
     </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Focus sur le champ de réponse
@@ -343,3 +319,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <?php include 'footer.php'; ?>
+

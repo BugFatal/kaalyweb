@@ -4,7 +4,7 @@ require_once 'config.php';
 
 if (isset($_GET['number']) && is_numeric($_GET['number'])) {
     $number = (int) $_GET['number'];
-    if ($number < 1 || $number > 10) {
+    if ($number < 1 || $number > 12) {
         header('Location: index.php');
         exit;
     }
@@ -26,7 +26,7 @@ include 'header.php';
                 </div>
                 <div class="card-body p-4">
                     <div class="row">
-                        <?php for($i = 1; $i <= 10; $i++): ?>
+                        <?php for($i = 1; $i <= 12; $i++): ?>
                             <div class="col-md-6 mb-3">
                                 <div class="multiplication-card" onclick="revealResult(this)">
                                     <div class="card h-100 border-0 shadow-sm">
@@ -51,17 +51,17 @@ include 'header.php';
                 </div>
                 <div class="card-footer text-center py-3">
                     <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                        <a href="practice_a_table.php?table=<?php echo $number; ?>" class="btn btn-success btn-lg">
+                        <a href="practice.php?table=<?php echo $number; ?>" class="btn btn-success btn-lg">
                             <i class="fas fa-graduation-cap me-2"></i>S'entraîner sur la table de <?php echo $number; ?>
                         </a>
                     </div>
                     <div class="mt-3">
-                        <a href="index.php" class="btn btn-outline-primary me-2">
-                            <i class="fas fa-home me-1"></i>Accueil
-                        </a>
                         <a href="practice.php" class="btn btn-outline-info">
                             <i class="fas fa-random me-1"></i>Toutes les tables
                         </a>
+                    </div>
+                    <div class="mt-3">
+                    <a href="index.php" class="btn btn-primary">Retour à l'accueil</a>
                     </div>
                 </div>
             </div>
