@@ -14,10 +14,8 @@ function generateQuestion($difficulty, $pdo, $user_id) {
         'hard' => 30
     ][$difficulty] ?? 10;
 
-    // 30% de chance de choisir une question difficile
     if (rand(1, 100) <= 31) {
         try {
-            // Récupérer les multiplications difficiles
             $stmt = $pdo->prepare("
                 SELECT table_number, multiplier 
                 FROM difficulty_stats 
@@ -31,7 +29,6 @@ function generateQuestion($difficulty, $pdo, $user_id) {
             $difficultQuestions = $stmt->fetchAll();
 
             if (!empty($difficultQuestions)) {
-                // Sélectionner une question difficile au hasard
                 $selectedQuestion = $difficultQuestions[array_rand($difficultQuestions)];
                 return [
                     'number' => $selectedQuestion['table_number'],
@@ -43,21 +40,18 @@ function generateQuestion($difficulty, $pdo, $user_id) {
         }
     }
 
-    // Génération aléatoire standard
     return [
         'number' => rand(1, 10),
         'multiplier' => rand(1, $maxMultiplier)
     ];
 }
 
-// Fonction pour gérer les erreurs
 function handleError($message) {
     $_SESSION['error_message'] = $message;
     header('Location: practice.php');
     exit();
 }
 
-// Récupération de l'identifiant de l'utilisateur depuis Yunohost
 $user_id = $_SERVER['REMOTE_USER'] ?? 'anonymous';
 
 // Initialisation des variables de session
@@ -71,10 +65,9 @@ if (!isset($_SESSION['total'])) {
 }
 
 // Gestion des paramètres de pratique
-$_SESSION['number'] = $_POST['number'] ?? $_SESSION['number'] ?? 'all';
 $_SESSION['difficulty'] = $_POST['difficulty'] ?? $_SESSION['difficulty'] ?? 'easy';
 
-// Génération d'une nouvelle question à chaque chargement de page
+// Génération d'une nouvelle question
 $question = generateQuestion($_SESSION['difficulty'], $pdo, $user_id);
 $number = $question['number'];
 $randomMultiplier = $question['multiplier'];
@@ -103,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['answer'], $_POST['numb
         $_SESSION['total']++;
         $_SESSION['total_questions']++;
 
-        // Enregistrement du résultat dans la base de données
+        // Enregistrement dans la base de données
         $stmt = $pdo->prepare("INSERT INTO training_results (user_id, correct_answers, total_questions, difficulty, training_date, table_number, multiplier, is_correct) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?)");
         $stmt->execute([
             $user_id,
@@ -117,10 +110,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['answer'], $_POST['numb
 
         // Mise à jour des statistiques de difficulté
         $stmt = $pdo->prepare("INSERT INTO difficulty_stats (user_id, table_number, multiplier, total_attempts, correct_attempts) 
-                               VALUES (?, ?, ?, 1, ?) 
-                               ON DUPLICATE KEY UPDATE 
-                               total_attempts = total_attempts + 1, 
-                               correct_attempts = correct_attempts + ?");
+                             VALUES (?, ?, ?, 1, ?) 
+                             ON DUPLICATE KEY UPDATE 
+                             total_attempts = total_attempts + 1, 
+                             correct_attempts = correct_attempts + ?");
         $stmt->execute([
             $user_id,
             (int) $_POST['number'],
@@ -129,27 +122,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['answer'], $_POST['numb
             $isCorrect ? 1 : 0
         ]);
 
-        // Incrémentation du nombre total de sessions si c'est une nouvelle session
         if ($_SESSION['total'] == 1) {
             $_SESSION['total_sessions']++;
         }
     } catch (Exception $e) {
-        handleError("Une erreur est survenue lors du traitement de votre réponse : " . $e->getMessage());
+        handleError("Une erreur est survenue : " . $e->getMessage());
     }
 }
 
 // Récupération des statistiques de difficulté
 try {
     $stmt = $pdo->prepare("SELECT table_number, multiplier, total_attempts, correct_attempts 
-                           FROM difficulty_stats 
-                           WHERE user_id = ? 
-                           ORDER BY (correct_attempts / total_attempts) ASC 
-                           LIMIT 5");
+                         FROM difficulty_stats 
+                         WHERE user_id = ? 
+                         ORDER BY (correct_attempts / total_attempts) ASC 
+                         LIMIT 5");
     $stmt->execute([$user_id]);
     $difficultyStats = $stmt->fetchAll();
 } catch (Exception $e) {
     $difficultyStats = [];
-    $message = "Impossible de récupérer les statistiques de difficulté : " . $e->getMessage();
+    $message = "Impossible de récupérer les statistiques : " . $e->getMessage();
     $messageClass = "alert-warning";
 }
 
@@ -171,19 +163,15 @@ include 'header.php';
         <div class="col-md-8 mx-auto">
             <div class="card mb-4">
                 <div class="card-body">
-                    <form method="POST" class="mb-4">
-                        <div class="row">
-                            <div class="col-12 mb-3">
-                                <label for="difficulty" class="form-label">Niveau de difficulté :</label>
-                                <select name="difficulty" id="difficulty" class="form-select">
-                                    <option value="easy" <?php echo $_SESSION['difficulty'] === 'easy' ? 'selected' : ''; ?>>Facile (1-10)</option>
-                                    <option value="medium" <?php echo $_SESSION['difficulty'] === 'medium' ? 'selected' : ''; ?>>Moyen (1-20)</option>
-                                    <option value="hard" <?php echo $_SESSION['difficulty'] === 'hard' ? 'selected' : ''; ?>>Difficile (1-30)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Mettre à jour la difficulté</button>
-                    </form>
+                    <!-- Bouton pour ouvrir le modal -->
+                    <div class="text-end mb-3">
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#difficultyModal">
+                            <i class="fas fa-cog"></i> Difficulté: <?php 
+                                $difficulties = ['easy' => 'Facile', 'medium' => 'Moyen', 'hard' => 'Difficile'];
+                                echo $difficulties[$_SESSION['difficulty']] ?? 'Facile'; 
+                            ?>
+                        </button>
+                    </div>
 
                     <?php if ($message): ?>
                         <div class="alert <?php echo $messageClass; ?>"><?php echo $message; ?></div>
@@ -207,20 +195,22 @@ include 'header.php';
                                     <h5 class="card-title">Progression</h5>
                                     <p class="card-text">Réponses correctes : <?php echo $_SESSION['correct']; ?> / <?php echo $_SESSION['total']; ?></p>
                                     <div class="progress">
-                                        <div class="progress-bar bg-success" role="progressbar" style="width: <?php echo $_SESSION['total'] > 0 ? ($_SESSION['correct'] / $_SESSION['total'] * 100) : 0; ?>%" aria-valuenow="<?php echo $_SESSION['correct']; ?>" aria-valuemin="0" aria-valuemax="<?php echo $_SESSION['total']; ?>"></div>
+                                        <div class="progress-bar bg-success" role="progressbar" 
+                                             style="width: <?php echo $_SESSION['total'] > 0 ? ($_SESSION['correct'] / $_SESSION['total'] * 100) : 0; ?>%">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-sm-6 mb-3">
-    <div class="card bg-light">
-        <div class="card-body text-center">
-            <h5 class="card-title">Statistiques globales</h5>
-            <p class="card-text">Sessions d'entraînement : <?php echo isset($_SESSION['total_sessions']) ? $_SESSION['total_sessions'] : 0; ?></p>
-            <p class="card-text">Questions répondues : <?php echo isset($_SESSION['total_questions']) ? $_SESSION['total_questions'] : 0; ?></p>
-        </div>
-    </div>
-</div>
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Statistiques globales</h5>
+                                    <p class="card-text">Sessions d'entraînement : <?php echo $_SESSION['total_sessions']; ?></p>
+                                    <p class="card-text">Questions répondues : <?php echo $_SESSION['total_questions']; ?></p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <?php if (!empty($difficultyStats)): ?>
@@ -243,7 +233,7 @@ include 'header.php';
 
                     <div class="text-center mt-3">
                         <a href="progress.php" class="btn btn-info">Voir ma progression détaillée</a>
-                        <a href="reset.php" class="btn btn-warning">Réinitialiser mes résultats</a>
+                        
                     </div>
                 </div>
             </div>
@@ -251,8 +241,52 @@ include 'header.php';
     </div>
 </div>
 
-<?php include 'footer.php'; ?>
+<!-- Modal de difficulté -->
+<div class="modal fade" id="difficultyModal" tabindex="-1" aria-labelledby="difficultyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="difficultyModalLabel">Choisir la difficulté</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Niveau de difficulté :</label>
+                        <div class="d-grid gap-2">
+                            <div class="btn-group-vertical" role="group">
+                                <input type="radio" class="btn-check" name="difficulty" id="easy" value="easy" 
+                                    <?php echo $_SESSION['difficulty'] === 'easy' ? 'checked' : ''; ?>>
+                                <label class="btn btn-outline-primary text-start" for="easy">
+                                    <i class="fas fa-star"></i> Facile
+                                    <small class="d-block text-muted">Multiplicateurs de 1 à 10</small>
+                                </label>
 
+                                <input type="radio" class="btn-check" name="difficulty" id="medium" value="medium"
+                                    <?php echo $_SESSION['difficulty'] === 'medium' ? 'checked' : ''; ?>>
+                                <label class="btn btn-outline-primary text-start" for="medium">
+                                    <i class="fas fa-star"></i><i class="fas fa-star"></i> Moyen
+                                    <small class="d-block text-muted">Multiplicateurs de 1 à 20</small>
+                                </label>
+
+                                <input type="radio" class="btn-check" name="difficulty" id="hard" value="hard"
+                                    <?php echo $_SESSION['difficulty'] === 'hard' ? 'checked' : ''; ?>>
+                                <label class="btn btn-outline-primary text-start" for="hard">
+                                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i> Difficile
+                                    <small class="d-block text-muted">Multiplicateurs de 1 à 30</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Appliquer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -266,7 +300,23 @@ document.addEventListener('DOMContentLoaded', function() {
             this.form.submit();
         }
     });
+
+    // Gérer la soumission du formulaire dans le modal
+    const difficultyModal = document.getElementById('difficultyModal');
+    difficultyModal.addEventListener('shown.bs.modal', function () {
+        const firstInput = difficultyModal.querySelector('input[type="radio"]');
+        if (firstInput) firstInput.focus();
+    });
+
+    // Auto-submit quand on change de difficulté
+    const difficultyInputs = document.querySelectorAll('input[name="difficulty"]');
+    difficultyInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+    });
 });
 </script>
-</body>
-</html>
+
+<?php include 'footer.php'; ?>
+

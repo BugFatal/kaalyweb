@@ -3,9 +3,9 @@ session_start();
 require_once 'config.php';  // S'assurer que la configuration est chargée
 require_once 'badges-config.php';
 // Configuration du jeu
-$GAME_DURATION = 10; // 2 minutes en secondes
+$GAME_DURATION = 60; // 1 minute en secondes
 $POINTS_BASE = 100;   // Points de base pour une bonne réponse
-$TIME_BONUS = 10;     // Points bonus par seconde restante
+$TIME_BONUS = 50;     // Points bonus par seconde restante
 $STREAK_BONUS = 50;   // Points bonus par réponse consécutive correcte
 
 // Récupération de l'identifiant de l'utilisateur
@@ -1171,5 +1171,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 </script>
-</body>
-</html>
+<?php include 'footer.php'; ?>

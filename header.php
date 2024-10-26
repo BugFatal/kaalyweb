@@ -62,11 +62,11 @@
                     <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'practice.php' ? 'active' : ''; ?>" href="practice.php">Entraînement</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'progress.php' ? 'active' : ''; ?>" href="challenge.php">Challenge</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'progress.php' ? 'active' : ''; ?>" href="progress.php">Progression</a>
-                </li>
+    <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'challenge.php' ? 'active' : ''; ?>" href="challenge.php">Challenge</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'progress.php' ? 'active' : ''; ?>" href="progress.php">Progression</a>
+</li>
             </ul>
         </div>
     </div>

@@ -22,7 +22,6 @@ function generateQuestion($difficulty, $pdo, $user_id, $tableNumber) {
         'hard' => 30
     ][$difficulty] ?? 10;
 
-    // 30% de chance de choisir une multiplication difficile pour cette table
     if (rand(1, 100) <= 31) {
         try {
             $stmt = $pdo->prepare("
@@ -55,14 +54,12 @@ function generateQuestion($difficulty, $pdo, $user_id, $tableNumber) {
     ];
 }
 
-// Fonction pour gérer les erreurs
 function handleError($message) {
     $_SESSION['error_message'] = $message;
     header('Location: practice_a_table.php?table=' . $_GET['table']);
     exit();
 }
 
-// Récupération de l'identifiant de l'utilisateur depuis Yunohost
 $user_id = $_SERVER['REMOTE_USER'] ?? 'anonymous';
 
 // Initialisation des variables de session spécifiques à la table
@@ -139,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['answer'], $_POST['mult
     }
 }
 
-// Récupération des statistiques de difficulté pour cette table
+// Récupération des statistiques pour cette table
 try {
     $stmt = $pdo->prepare("SELECT multiplier, total_attempts, correct_attempts 
                          FROM difficulty_stats 
@@ -163,19 +160,15 @@ include 'header.php';
         <div class="col-md-8 mx-auto">
             <div class="card mb-4">
                 <div class="card-body">
-                    <form method="POST" class="mb-4">
-                        <div class="row">
-                            <div class="col-12 mb-3">
-                                <label for="difficulty" class="form-label">Niveau de difficulté :</label>
-                                <select name="difficulty" id="difficulty" class="form-select">
-                                    <option value="easy" <?php echo $_SESSION['difficulty'] === 'easy' ? 'selected' : ''; ?>>Facile (1-10)</option>
-                                    <option value="medium" <?php echo $_SESSION['difficulty'] === 'medium' ? 'selected' : ''; ?>>Moyen (1-20)</option>
-                                    <option value="hard" <?php echo $_SESSION['difficulty'] === 'hard' ? 'selected' : ''; ?>>Difficile (1-30)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Mettre à jour la difficulté</button>
-                    </form>
+                    <!-- Bouton pour ouvrir le modal -->
+                    <div class="text-end mb-3">
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#difficultyModal">
+                            <i class="fas fa-cog"></i> Difficulté: <?php 
+                                $difficulties = ['easy' => 'Facile', 'medium' => 'Moyen', 'hard' => 'Difficile'];
+                                echo $difficulties[$_SESSION['difficulty']] ?? 'Facile'; 
+                            ?>
+                        </button>
+                    </div>
 
                     <?php if ($message): ?>
                         <div class="alert <?php echo $messageClass; ?>"><?php echo $message; ?></div>
@@ -246,7 +239,52 @@ include 'header.php';
     </div>
 </div>
 
-<?php include 'footer.php'; ?>
+<!-- Modal de difficulté -->
+<div class="modal fade" id="difficultyModal" tabindex="-1" aria-labelledby="difficultyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="difficultyModalLabel">Choisir la difficulté</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Niveau de difficulté :</label>
+                        <div class="d-grid gap-2">
+                            <div class="btn-group-vertical" role="group">
+                                <input type="radio" class="btn-check" name="difficulty" id="easy" value="easy" 
+                                    <?php echo $_SESSION['difficulty'] === 'easy' ? 'checked' : ''; ?>>
+                                <label class="btn btn-outline-primary text-start" for="easy">
+                                    <i class="fas fa-star"></i> Facile
+                                    <small class="d-block text-muted">Multiplicateurs de 1 à 10</small>
+                                </label>
+
+                                <input type="radio" class="btn-check" name="difficulty" id="medium" value="medium"
+                                    <?php echo $_SESSION['difficulty'] === 'medium' ? 'checked' : ''; ?>>
+                                <label class="btn btn-outline-primary text-start" for="medium">
+                                    <i class="fas fa-star"></i><i class="fas fa-star"></i> Moyen
+                                    <small class="d-block text-muted">Multiplicateurs de 1 à 20</small>
+                                </label>
+
+                                <input type="radio" class="btn-check" name="difficulty" id="hard" value="hard"
+                                    <?php echo $_SESSION['difficulty'] === 'hard' ? 'checked' : ''; ?>>
+                                <label class="btn btn-outline-primary text-start" for="hard">
+                                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i> Difficile
+                                    <small class="d-block text-muted">Multiplicateurs de 1 à 30</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Appliquer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -261,7 +299,24 @@ document.addEventListener('DOMContentLoaded', function() {
             this.form.submit();
         }
     });
+
+    // Gérer la soumission du formulaire dans le modal
+    const difficultyModal = document.getElementById('difficultyModal');
+    difficultyModal.addEventListener('shown.bs.modal', function () {
+        const firstInput = difficultyModal.querySelector('input[type="radio"]');
+        if (firstInput) firstInput.focus();
+    });
+
+    // Auto-submit quand on change de difficulté
+    const difficultyInputs = document.querySelectorAll('input[name="difficulty"]');
+    difficultyInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+    });
 });
 </script>
-</body>
-</html>
+
+<?php include 'footer.php'; ?>
+
+
