@@ -59,45 +59,7 @@ include 'header.php';
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Style supplémentaire pour le tableau -->
-<style>
-    .table-responsive {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    .multiplication-table th, .multiplication-table td {
-        padding: 0.5rem;
-        min-width: 3rem;
-        position: relative;
-        transition: all 0.2s ease-in-out;
-    }
-    
-    /* Style pour les cellules de la même ligne */
-    .multiplication-table .highlight-row td,
-    .multiplication-table .highlight-row th {
-        background-color: rgba(0, 123, 255, 0.1);
-    }
-
-    /* Style pour les cellules de la même colonne */
-    .multiplication-table .highlight-col {
-        background-color: rgba(0, 123, 255, 0.1);
-    }
-
-    /* Style pour la cellule survolée */
-    .multiplication-table .highlight-cell {
-        background-color: rgba(255, 193, 7, 0.3) !important;
-        font-weight: bold;
-    }
-    
-    @media (max-width: 768px) {
-        .multiplication-table th, .multiplication-table td {
-            padding: 0.3rem;
-            min-width: 2.5rem;
-        }
-    }
-</style>
-
+<!-- Script pour mettre en surbrillance les lignes et colonnes -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const table = document.querySelector('.multiplication-table');

@@ -1,0 +1,374 @@
+/* Variables globales */
+:root {
+    --primary-gradient: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --card-bg: rgba(255, 255, 255, 0.1);
+    --button-gradient: linear-gradient(45deg, #FF6B6B, #FF8E53);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    --border-radius: 10px;
+}
+
+/* Style global */
+body {
+    background: var(--primary-gradient);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    min-height: 100vh;
+}
+
+/* Navbar */
+.navbar {
+    background: rgba(0, 0, 0, 0.2) !important;
+    backdrop-filter: blur(10px);
+}
+
+.navbar-brand, .nav-link {
+    color: var(--text-primary) !important;
+}
+
+.nav-link {
+    opacity: 0.8;
+    transition: opacity 0.3s;
+}
+
+.nav-link:hover, .nav-link.active {
+    opacity: 1;
+}
+
+/* Cards */
+.card {
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+}
+
+.card-header {
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Tables */
+.table {
+    color: var(--text-primary);
+}
+
+.table-primary, .table-primary > th {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-primary);
+}
+
+.multiplication-table td, 
+.multiplication-table th {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Boutons */
+
+/* Button */
+.row .col-sm-4 a{
+    background-image:linear-gradient(to right, #e44d26 0%, #f16529 100%);
+   }
+
+
+/* Button */
+.mx-auto form .btn-primary{
+    background-image:linear-gradient(to right, #108dc7 0%, #ef8e38 100%);
+   }
+   
+   /* Button */
+   .mx-auto form .btn-success{
+    background-image:linear-gradient(to right, #40e0d0 0%, #ff8c00 33%, #ff0080 100%);
+   }
+   
+   /* Button */
+   .mx-auto .card .btn-info{
+    background-image:linear-gradient(to right, #06beb6 0%, #48b1bf 100%);
+   }
+   
+   /* Button */
+   .mx-auto .card .card-body .text-center .btn-primary{
+    background-image:linear-gradient(to right, #bc4e9c 0%, #f80759 100%);
+   }
+   
+  /* Button */
+.row .mt-3 a{
+    background-image:linear-gradient(to right, #40e0d0 0%, #ff8c00 33%, #ff0080 100%);
+   }
+   
+    
+.btn-primary, .btn-success, .table-button {
+    background: var(--button-gradient);
+    border: none;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+/* Boutons des tables sur l'index */
+
+/* Text center */
+.multiplication-table .table-primary .text-center{
+    background-color:#9bbced;
+    background-image:linear-gradient(to right, #f7971e 0%, #ffd200 100%);
+   }
+   
+   /* Table primary */
+   .multiplication-table tr .table-primary{
+    background-image:linear-gradient(to right, #0f0c29 0%, #302b63 33%, #24243e 100%);
+    transform:translatex(0px) translatey(0px);
+    background-color:rgba(233,113,113,0.1) !important;
+   }
+   
+    /* Table primary */   
+.table-button {
+    background-color: #c4e423;
+    border: none;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.table-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    background-color: #526670;
+}
+
+/* Formulaires */
+.form-control, .form-select {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+}
+
+.form-control:focus, .form-select:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: var(--text-primary);
+    box-shadow: none;
+}
+
+/* Listes */
+.list-group-item {
+    background: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+/* Progress bars */
+.progress {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.progress-bar {
+    background: var(--button-gradient);
+}
+
+/* Alerts */
+.alert {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+}
+
+/* Table.php spécifique */
+.multiplication-card .card {
+    transition: all 0.3s ease;
+}
+
+.multiplication-card:hover .card {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.operation {
+    color: var(--text-primary);
+}
+
+.operator, .equals {
+    color: var(--text-secondary);
+}
+
+/* Practice.php spécifique */
+.display-6 {
+    color: var(--text-primary);
+}
+
+/* Badges */
+.badge {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.badge.bg-primary {
+    background: rgba(255, 107, 107, 0.3) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .table-responsive {
+        backdrop-filter: blur(5px);
+    }
+}
+
+/* Utilitaires */
+.text-muted {
+    color: var(--text-secondary) !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+}
+
+/* Card bodies avec couleur solide */
+.mx-auto .mb-3 .card-body,
+.mx-auto .card-body .card-body {
+    background-color: #45575d;
+    border-radius: var(--border-radius);
+}
+
+/* Footer adapté au thème sombre */
+footer.mt-5 {
+    background: rgba(0, 0, 0, 0.2) !important;
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+/* Table.php - Header avec gradient */
+.col-md-8 .card .card-header {
+    background: linear-gradient(45deg, #FF6B6B, #FF8E53) !important;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+/* Table.php - Spans dans les opérations */
+.col-md-8 .operation span {
+    color: var(--text-primary);
+}
+
+.col-md-8 .operation .operator,
+.col-md-8 .operation .equals {
+    color: var(--text-secondary);
+}
+
+/* Amélioration des transitions */
+.card, .card-body, .card-header {
+    transition: all 0.3s ease;
+}
+/* Styles pour table.php */
+.multiplication-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.multiplication-card:hover {
+    transform: translateY(-3px);
+}
+
+.multiplication-card .card {
+    transition: all 0.3s ease;
+}
+
+.multiplication-card:hover .card {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.operation {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.operator, .equals {
+    color: var(--text-secondary);
+    margin: 0 0.5rem;
+}
+
+.result {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.number1, .number2 {
+    color: var(--text-secondary);
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.multiplication-card:hover .result {
+    animation: pulse 0.5s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .operation {
+        font-size: 1.3rem;
+    }
+    .result {
+        font-size: 1.5rem;
+    }
+}
+
+/* Styles pour la table de multiplication sur index.php */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+}
+
+.multiplication-table th, 
+.multiplication-table td {
+    padding: 0.5rem;
+    min-width: 3rem;
+    position: relative;
+    transition: all 0.2s ease-in-out;
+    color: var(--text-primary);
+}
+
+/* Surbrillance des lignes et colonnes */
+.multiplication-table .highlight-row td,
+.multiplication-table .highlight-row th {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.multiplication-table .highlight-col {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.multiplication-table .highlight-cell {
+    background: rgba(255, 107, 107, 0.2) !important;
+    font-weight: bold;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .multiplication-table th, 
+    .multiplication-table td {
+        padding: 0.3rem;
+        min-width: 2.5rem;
+    }
+}

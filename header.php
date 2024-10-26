@@ -8,7 +8,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Ajouter dans le <head> de votre fichier -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-<link rel="stylesheet" href="public\css\badges.css">
+<link rel="stylesheet" href="public/css/modern-theme.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="public/css/challenge3.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="public/css/badges.css?v=<?php echo time(); ?>">
     <style>
         body {
             padding-top: 56px;
@@ -58,6 +60,9 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'practice.php' ? 'active' : ''; ?>" href="practice.php">Entraînement</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'progress.php' ? 'active' : ''; ?>" href="challenge.php">Challenge</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'progress.php' ? 'active' : ''; ?>" href="progress.php">Progression</a>

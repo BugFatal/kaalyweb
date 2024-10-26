@@ -525,238 +525,65 @@ $pageTitle = 'Challenge - Tables de Multiplication';
 include 'header.php';
 ?>
 
-<!-- Suite du fichier challenge.php -->
-
-<style>
-/* Styles pour le jeu */
-.game-container {
-    max-width: 800px;
-    margin: 0 auto;
-    position: relative;
-}
-
-.game-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.timer {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #dc3545;
-}
-
-.timer.warning {
-    animation: pulse 1s infinite;
-}
-
-.score-display {
-    font-size: 1.5rem;
-    color: #28a745;
-}
-
-.streak-counter {
-    font-size: 1.2rem;
-    color: #007bff;
-}
-
-.question-container {
-    text-align: center;
-    padding: 2rem;
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-    margin-bottom: 2rem;
-}
-
-.question {
-    font-size: 3rem;
-    margin-bottom: 1.5rem;
-    color: #343a40;
-}
-
-.answer-input {
-    font-size: 2rem;
-    width: 200px;
-    text-align: center;
-    margin-bottom: 1rem;
-    padding: 0.5rem;
-    border: 3px solid #007bff;
-    border-radius: 10px;
-    transition: all 0.3s ease;
-}
-
-.answer-input:focus {
-    border-color: #0056b3;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
-.points-popup {
-    position: absolute;
-    font-size: 1.5rem;
-    font-weight: bold;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.game-dashboard {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.dashboard-card {
-    background: white;
-    padding: 1rem;
-    border-radius: 10px;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.stars-display {
-    font-size: 2rem;
-    color: #ffc107;
-    margin-bottom: 1rem;
-}
-
-/* Animations */
-@keyframes slideUp {
-    0% { transform: translateY(0); opacity: 1; }
-    100% { transform: translateY(-50px); opacity: 0; }
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
-}
-
-/* Modal de fin de partie */
-.game-over-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: 1000;
-}
-
-.modal-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 2rem;
-    border-radius: 15px;
-    width: 90%;
-    max-width: 600px;
-    text-align: center;
-}
-
-.results-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-    margin: 1.5rem 0;
-}
-
-.result-item {
-    background: #f8f9fa;
-    padding: 1rem;
-    border-radius: 8px;
-}
-
-/* Tableau des scores */
-.highscores-table {
-    width: 100%;
-    margin-top: 1.5rem;
-    border-collapse: collapse;
-}
-
-.highscores-table th,
-.highscores-table td {
-    padding: 0.75rem;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.badge-earned {
-    animation: fadeInScale 0.5s ease-out;
-}
-
-@keyframes fadeInScale {
-    from {
-        opacity: 0;
-        transform: scale(0.5);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-/* Daily Challenge Banner */
-.daily-challenge {
-    background: linear-gradient(45deg, #ff6b6b, #cc2e5d);
-    color: white;
-    padding: 1rem;
-    border-radius: 10px;
-    margin-bottom: 2rem;
-    text-align: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.badge-earned {
-    display: inline-block;
-    margin: 10px;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 10px;
-    text-align: center;
-}
-
-.badge-earned i {
-    font-size: 2rem;
-    margin-bottom: 10px;
-}
-
-.badge-earned p {
-    margin: 5px 0;
-    font-weight: bold;
-}
-
-.badge-earned small {
-    display: block;
-    color: #6c757d;
-}
-
-.badges-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 15px;
-    margin: 20px 0;
-}
-
-</style>
 
 <div class="container">
     <div class="game-container">
+<!-- Écran d'introduction -->
+<div id="intro-screen" class="intro-screen">
+    <div class="intro-content">
+        <div class="intro-header">
+            <h1 class="title">Challenge des Tables</h1>
+            <div class="subtitle">Testez votre rapidité en calcul mental !</div>
+        </div>
+
+        <div class="rules-container">
+            <div class="rules-section">
+                <div class="section-title">
+                    <i class="fas fa-gamepad"></i>
+                    <h3>Comment jouer ?</h3>
+                </div>
+                <ul class="fancy-list">
+                    <li><i class="fas fa-calculator"></i> Résolvez des multiplications en temps limité</li>
+                    <li><i class="fas fa-tachometer-alt"></i> Plus vous êtes rapide, plus vous gagnez de points</li>
+                    <li><i class="fas fa-fire"></i> Enchaînez les bonnes réponses pour des bonus</li>
+                    <li><i class="fas fa-trophy"></i> Défiez-vous avec le challenge du jour</li>
+                </ul>
+            </div>
+
+            <div class="points-section">
+                <div class="section-title">
+                    <i class="fas fa-star"></i>
+                    <h3>Système de points</h3>
+                </div>
+                <div class="points-grid">
+                    <div class="point-card">
+                        <i class="fas fa-check-circle"></i>
+                        <h4>Base</h4>
+                        <p>100 points</p>
+                        <small>Par bonne réponse</small>
+                    </div>
+                    <div class="point-card">
+                        <i class="fas fa-bolt"></i>
+                        <h4>Vitesse</h4>
+                        <p>+50 points</p>
+                        <small>Bonus rapidité</small>
+                    </div>
+                    <div class="point-card">
+                        <i class="fas fa-fire-alt"></i>
+                        <h4>Série</h4>
+                        <p>+50 points</p>
+                        <small>Par réponse consécutive</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button id="start-game" class="start-button">
+            <i class="fas fa-play"></i> Je suis prêt !
+        </button>
+    </div>
+</div>
+
         <!-- Défi quotidien -->
         <div class="daily-challenge">
             <h3>Défi du Jour</h3>
@@ -766,10 +593,10 @@ include 'header.php';
 
         <!-- En-tête du jeu -->
         <div class="game-header">
-            <div class="timer" id="timer">2:00</div>
-            <div class="score-display">Score: <span id="score">0</span></div>
-            <div class="streak-counter">Série: <span id="streak">0</span></div>
-        </div>
+    <div class="timer" id="timer"><i class="fas fa-clock"></i> 2:00</div>
+    <div class="score-display">Score: <span id="score">0</span></div>
+    <div class="streak-counter"><i class="fas fa-fire"></i> Série: <span id="streak">0</span></div>
+</div>
 
         <!-- Question -->
         <div class="question-container">
@@ -781,19 +608,22 @@ include 'header.php';
 
         <!-- Tableau de bord -->
         <div class="game-dashboard">
-            <div class="dashboard-card">
-                <h4>Questions</h4>
-                <p id="questions-count">0</p>
-            </div>
-            <div class="dashboard-card">
-                <h4>Précision</h4>
-                <p id="accuracy">0%</p>
-            </div>
-            <div class="dashboard-card">
-                <h4>Meilleure série</h4>
-                <p id="best-streak">0</p>
-            </div>
-        </div>
+    <div class="dashboard-card">
+        <i class="fas fa-question-circle"></i>
+        <h4>Questions</h4>
+        <p id="questions-count">0</p>
+    </div>
+    <div class="dashboard-card">
+        <i class="fas fa-bullseye"></i>
+        <h4>Précision</h4>
+        <p id="accuracy">0%</p>
+    </div>
+    <div class="dashboard-card">
+        <i class="fas fa-trophy"></i>
+        <h4>Meilleure série</h4>
+        <p id="best-streak">0</p>
+    </div>
+</div>
 
         <!-- Modal de fin de partie -->
         <div class="game-over-modal" id="gameOverModal">
@@ -1187,6 +1017,11 @@ function showGameOverModal(data) {
     document.getElementById('finalAccuracy').textContent = 
         `${Math.round((data.correctAnswers / data.questionsAnswered) * 100)}%`;
 
+        // Nettoyer d'abord les anciens résultats
+        const badgesContainer = document.getElementById('earnedBadges');
+    const existingResults = document.querySelectorAll('.daily-challenge-results');
+    existingResults.forEach(element => element.remove());
+
     // Afficher les résultats du défi quotidien
     const dailyResultsHTML = `
         <div class="daily-challenge-results mt-4">
@@ -1204,7 +1039,6 @@ function showGameOverModal(data) {
     `;
     
     // Insérer les résultats du défi avant les badges
-    const badgesContainer = document.getElementById('earnedBadges');
     badgesContainer.insertAdjacentHTML('beforebegin', dailyResultsHTML);
 
     // Afficher les badges et scores comme avant
@@ -1220,14 +1054,15 @@ function showGameOverModal(data) {
         badgesContainer.appendChild(badgeElement);
     });
 
-    // Meilleurs scores
-    const highscoresList = document.getElementById('highscoresList');
-    highscoresList.innerHTML = data.highScores.map((score, index) => `
-        <tr>
-            <td>${index + 1}</td>
+      // Pour le tableau des meilleurs scores, ajout de style et formatage
+      const highscoresList = document.getElementById('highscoresList');
+    const highScoresLimited = data.highScores.slice(0, 10); // Limiter à 10 scores
+    highscoresList.innerHTML = highScoresLimited.map((score, index) => `
+        <tr class="${index === 0 ? 'table-warning' : ''}">
+            <td class="text-center">${index + 1}</td>
             <td>${score.user_id}</td>
-            <td>${score.score}</td>
-            <td>${new Date(score.date_played).toLocaleDateString()}</td>
+            <td class="text-end">${score.score.toLocaleString()}</td>
+            <td class="text-center">${new Date(score.date_played).toLocaleDateString()}</td>
         </tr>
     `).join('');
 
@@ -1294,10 +1129,47 @@ async function startNewGame() {
 }
 
 // Démarrer le jeu au chargement de la page
+// document.addEventListener('DOMContentLoaded', function() {
+//    initGame();
+//    elements.answer.addEventListener('keyup', handleAnswer);
+//});
+
+// Au début du script, ajoutez :
 document.addEventListener('DOMContentLoaded', function() {
-    initGame();
-    elements.answer.addEventListener('keyup', handleAnswer);
+    // Cacher le contenu du jeu au démarrage
+    document.querySelectorAll('.game-content').forEach(el => el.style.display = 'none');
+    
+    // Gérer le clic sur le bouton de démarrage
+    const startButton = document.getElementById('start-game');
+    startButton.addEventListener('click', function() {
+        // Cacher l'écran d'introduction
+        document.getElementById('intro-screen').style.display = 'none';
+        // Afficher le contenu du jeu
+        document.querySelectorAll('.game-content').forEach(el => el.style.display = 'block');
+        // Démarrer le jeu
+        initGame();
+    });
 });
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Ajouter la classe au body quand l'intro est visible
+    document.body.classList.add('intro-visible');
+    
+    // Gérer le clic sur le bouton de démarrage
+    const startButton = document.getElementById('start-game');
+    startButton.addEventListener('click', function() {
+        // Cacher l'écran d'introduction
+        document.getElementById('intro-screen').style.display = 'none';
+        // Réactiver le scroll du body
+        document.body.classList.remove('intro-visible');
+        // Afficher le contenu du jeu
+        document.querySelectorAll('.game-content').forEach(el => el.style.display = 'block');
+        // Démarrer le jeu
+        initGame();
+    });
+});
+
 </script>
 </body>
 </html>
