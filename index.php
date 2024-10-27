@@ -5,6 +5,10 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 require_once 'config.php';
+require_once 'challenge-manager.php';
+
+$dailyChallengeManager = new DailyChallenge($pdo);
+$dailyChallenge = $dailyChallengeManager->getDailyChallenge();
 
 $pageTitle = 'Vindigni Tables de Multiplication';
 include 'header.php';
@@ -23,7 +27,7 @@ $stmt = $pdo->prepare("
     FROM challenge_scores 
     WHERE DATE(date_played) = CURDATE()
     ORDER BY score DESC 
-    LIMIT 5
+    LIMIT 20
 ");
 $stmt->execute();
 $dailyTopScores = $stmt->fetchAll();
@@ -79,7 +83,7 @@ $dailyTopScores = $stmt->fetchAll();
                             </span>
                         </div>
                     </div>
-                    <a href="challenge.php" class="btn btn-primary btn-lg mt-3 w-100">
+                    <a href="challenge2.php" class="btn btn-primary btn-lg mt-3 w-100">
                         <i class="fas fa-play-circle"></i> Relever le défi !
                     </a>
                 </div>

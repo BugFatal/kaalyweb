@@ -2,25 +2,17 @@
 session_start();
 require_once 'config.php';
 require_once 'badges-config.php';
-require_once 'challenge-manager.php';
-
-// Définir la classe spécifique pour cette page
-$pageSpecificClass = 'challenge-page';
-
-// Initialisation du gestionnaire de défis
-$challengeManager = new DailyChallenge($pdo);
-
-// Récupération des paramètres de jeu depuis le défi du jour
-$gameParams = $challengeManager->getGameParameters();
-$GAME_DURATION = $gameParams['GAME_DURATION'];
-$POINTS_BASE = $gameParams['POINTS_BASE'];
-$TIME_BONUS = $gameParams['TIME_BONUS'];
-$STREAK_BONUS = $gameParams['STREAK_BONUS'];
 
 // Définir un état "isEnding" dans la session pour le contrôle côté serveur
 if (!isset($_SESSION['isEnding'])) {
     $_SESSION['isEnding'] = false;
 }
+
+// Configuration du jeu
+$GAME_DURATION = 120; // 10 secondes pour les tests
+$POINTS_BASE = 100;
+$TIME_BONUS = 50;
+$STREAK_BONUS = 50;
 
 // Récupération de l'identifiant utilisateur
 $user_id = $_COOKIE['SSOwAuthUser'] ?? 'anonymous_' . uniqid();
@@ -115,210 +107,175 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     exit;
 }
 
-// Récupération du défi quotidien avec le nouveau gestionnaire
-$dailyChallenge = $challengeManager->getDailyChallenge();
+// Récupération du défi quotidien
+$stmt = $pdo->prepare("SELECT * FROM daily_challenges WHERE challenge_date = CURDATE()");
+$stmt->execute();
+$dailyChallenge = $stmt->fetch();
 
-// Inclusion du header après avoir défini toutes les variables nécessaires
-$pageTitle = 'Challenge du Jour';
+if (!$dailyChallenge) {
+    // Créer un nouveau défi quotidien si aucun n'existe
+    $difficulties = ['easy', 'medium', 'hard'];
+    $randomDifficulty = $difficulties[array_rand($difficulties)];
+    $stmt = $pdo->prepare("
+        INSERT INTO daily_challenges (challenge_date, target_score, difficulty, time_limit, description)
+        VALUES (CURDATE(), ?, ?, ?, ?)
+    ");
+    $stmt->execute([
+        rand(1000, 3000), // Score cible
+        $randomDifficulty,
+        120, // Temps limite
+        "Défi du jour : Obtenez le meilleur score possible en 2 minutes!"
+    ]);
+    $stmt = $pdo->prepare("SELECT * FROM daily_challenges WHERE challenge_date = CURDATE()");
+    $stmt->execute();
+    $dailyChallenge = $stmt->fetch();
+}
+
+// Inclure le fichier header.php
 include 'header.php';
-
 ?>
 
-<div class="challenge-page">
-    <div class="container challenge-container">
-        <div class="game-container">
-            <!-- Écran d'introduction -->
-            <div id="intro-screen" class="intro-screen">
-                <div class="intro-content">
-                    <div class="intro-header">
-                        <h1 class="title">Challenge des Tables</h1>
-                        <div class="subtitle">Testez votre rapidité en calcul mental !</div>
-                    </div>
+<!-- Le reste du code HTML et JavaScript -->
+<!-- Le reste du code HTML et JavaScript -->
 
-                    <div class="rules-container">
-                        <div class="rules-section">
-                            <div class="section-title">
-                                <i class="fas fa-gamepad"></i>
-                                <h3>Comment jouer ?</h3>
-                            </div>
-                            <ul class="fancy-list">
-                                <li>
-                                    <i class="fas fa-clock"></i> 
-                                    Résolvez des multiplications en <?php echo $dailyChallenge['time_limit']; ?> secondes
-                                </li>
-                                <li>
-                                    <i class="fas fa-trophy"></i> 
-                                    Objectif du jour : <?php echo number_format($dailyChallenge['target_score']); ?> points
-                                </li>
-                                <li>
-                                    <i class="fas fa-star"></i> 
-                                    Difficulté : <?php 
-                                        $difficultyLabels = [
-                                            'easy' => 'Facile',
-                                            'medium' => 'Moyen',
-                                            'hard' => 'Difficile'
-                                        ];
-                                        echo $difficultyLabels[$dailyChallenge['difficulty']] ?? 'Normal'; 
-                                    ?>
-                                </li>
-                                <li>
-                                    <i class="fas fa-bullseye"></i> 
-                                    <?php echo htmlspecialchars($dailyChallenge['description']); ?>
-                                </li>
-                            </ul>
-                        </div>
+<!-- Le reste du code HTML et JavaScript -->
 
-                        <div class="points-section">
-                            <div class="section-title">
-                                <i class="fas fa-star"></i>
-                                <h3>Système de points</h3>
-                            </div>
-                            <div class="points-grid">
-                                <div class="point-card">
-                                    <i class="fas fa-check-circle"></i>
-                                    <h4>Base</h4>
-                                    <p><?php echo number_format($dailyChallenge['points_base']); ?> points</p>
-                                    <small>Par bonne réponse</small>
-                                </div>
-                                <div class="point-card">
-                                    <i class="fas fa-bolt"></i>
-                                    <h4>Vitesse</h4>
-                                    <p>+<?php echo number_format($dailyChallenge['time_bonus']); ?> points</p>
-                                    <small>Bonus rapidité</small>
-                                </div>
-                                <div class="point-card">
-                                    <i class="fas fa-fire-alt"></i>
-                                    <h4>Série</h4>
-                                    <p>+<?php echo number_format($dailyChallenge['streak_bonus']); ?> points</p>
-                                    <small>Par réponse consécutive</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+<!-- Le reste du code HTML et JavaScript -->
 
-                    <div class="difficulty-indicator">
-                        <div class="difficulty-label">
-                            Niveau de difficulté : 
-                            <span class="badge bg-<?php 
-                                echo $dailyChallenge['difficulty'] === 'easy' ? 'success' : 
-                                    ($dailyChallenge['difficulty'] === 'medium' ? 'warning' : 'danger'); 
-                            ?>">
-                                <?php echo $difficultyLabels[$dailyChallenge['difficulty']] ?? 'Normal'; ?>
-                            </span>
-                        </div>
-                        <?php if ($dailyChallenge['difficulty'] === 'hard'): ?>
-                        <small class="text-warning">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            Ce défi est particulièrement difficile aujourd'hui !
-                        </small>
-                        <?php endif; ?>
-                    </div>
 
-                    <button id="start-game" class="start-button">
-                        <i class="fas fa-play"></i> Je suis prêt !
-                    </button>
+<div class="container">
+    <div class="game-container">
+<!-- Écran d'introduction -->
+<div id="intro-screen" class="intro-screen">
+    <div class="intro-content">
+        <div class="intro-header">
+            <h1 class="title">Challenge des Tables</h1>
+            <div class="subtitle">Testez votre rapidité en calcul mental !</div>
+        </div>
+
+        <div class="rules-container">
+            <div class="rules-section">
+                <div class="section-title">
+                    <i class="fas fa-gamepad"></i>
+                    <h3>Comment jouer ?</h3>
                 </div>
+                <ul class="fancy-list">
+                    <li><i class="fas fa-calculator"></i> Résolvez des multiplications en temps limité</li>
+                    <li><i class="fas fa-tachometer-alt"></i> Plus vous êtes rapide, plus vous gagnez de points</li>
+                    <li><i class="fas fa-fire"></i> Enchaînez les bonnes réponses pour des bonus</li>
+                    <li><i class="fas fa-trophy"></i> Défiez-vous avec le challenge du jour</li>
+                </ul>
             </div>
 
-            <!-- Contenu du jeu -->
-            <div class="game-content" style="display: none;">
-                <!-- Défi quotidien -->
-                <div class="daily-challenge">
-                    <h3>Défi du Jour</h3>
-                    <p><?php echo htmlspecialchars($dailyChallenge['description']); ?></p>
-                    <p>Objectif : <?php echo number_format($dailyChallenge['target_score']); ?> points</p>
+            <div class="points-section">
+                <div class="section-title">
+                    <i class="fas fa-star"></i>
+                    <h3>Système de points</h3>
                 </div>
-
-                <!-- En-tête du jeu -->
-                <div class="game-header">
-                    <div class="timer" id="timer"><i class="fas fa-clock"></i> 2:00</div>
-                    <div class="score-display">Score: <span id="score">0</span></div>
-                    <div class="streak-counter"><i class="fas fa-fire"></i> Série: <span id="streak">0</span></div>
+                <div class="points-grid">
+                    <div class="point-card">
+                        <i class="fas fa-check-circle"></i>
+                        <h4>Base</h4>
+                        <p>100 points</p>
+                        <small>Par bonne réponse</small>
+                    </div>
+                    <div class="point-card">
+                        <i class="fas fa-bolt"></i>
+                        <h4>Vitesse</h4>
+                        <p>+50 points</p>
+                        <small>Bonus rapidité</small>
+                    </div>
+                    <div class="point-card">
+                        <i class="fas fa-fire-alt"></i>
+                        <h4>Série</h4>
+                        <p>+50 points</p>
+                        <small>Par réponse consécutive</small>
+                    </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- Question -->
-                <div class="question-container">
-    <div class="question" id="question">
-        <span id="number"></span> × <span id="multiplier"></span> = ?
-    </div>
-    <input type="number" id="answer" class="answer-input" readonly>
-    <div id="numpad" class="numpad-container">
-        <button class="num-btn" data-value="1">1</button>
-        <button class="num-btn" data-value="2">2</button>
-        <button class="num-btn" data-value="3">3</button>
-        <button class="num-btn" data-value="4">4</button>
-        <button class="num-btn" data-value="5">5</button>
-        <button class="num-btn" data-value="6">6</button>
-        <button class="num-btn" data-value="7">7</button>
-        <button class="num-btn" data-value="8">8</button>
-        <button class="num-btn" data-value="9">9</button>
-        <button class="num-btn" data-value="0">0</button>
-        <button class="control-btn correct-btn" id="correct">
-            <i class="fas fa-backspace"></i>
-        </button>
-        <button class="control-btn validate-btn" id="validate">
-            <i class="fas fa-check"></i>
+        <button id="start-game" class="start-button">
+            <i class="fas fa-play"></i> Je suis prêt !
         </button>
     </div>
 </div>
 
-                <!-- Tableau de bord -->
-                <div class="game-dashboard">
-                    <div class="dashboard-card">
-                        <i class="fas fa-question-circle"></i>
-                        <h4>Questions</h4>
-                        <p id="questions-count">0</p>
-                    </div>
-                    <div class="dashboard-card">
-                        <i class="fas fa-bullseye"></i>
-                        <h4>Précision</h4>
-                        <p id="accuracy">0%</p>
-                    </div>
-                    <div class="dashboard-card">
-                        <i class="fas fa-trophy"></i>
-                        <h4>Meilleure série</h4>
-                        <p id="best-streak">0</p>
-                    </div>
-                </div>
-            </div>
+        <!-- Défi quotidien -->
+        <div class="daily-challenge">
+            <h3>Défi du Jour</h3>
+            <p><?php echo htmlspecialchars($dailyChallenge['description']); ?></p>
+            <p>Objectif : <?php echo number_format($dailyChallenge['target_score']); ?> points</p>
+        </div>
 
-            <!-- Modal de fin de partie -->
-            <div class="game-over-modal" id="gameOverModal">
-                <div class="modal-content">
-                    <h2>Partie terminée!</h2>
-                    <div class="stars-display" id="starsEarned"></div>
-                    <div class="results-grid">
-                        <div class="result-item">
-                            <h4>Score final</h4>
-                            <p id="finalScore">0</p>
-                        </div>
-                        <div class="result-item">
-                            <h4>Questions</h4>
-                            <p id="finalQuestions">0</p>
-                        </div>
-                        <div class="result-item">
-                            <h4>Précision</h4>
-                            <p id="finalAccuracy">0%</p>
-                        </div>
+        <!-- En-tête du jeu -->
+        <div class="game-header">
+    <div class="timer" id="timer"><i class="fas fa-clock"></i> 2:00</div>
+    <div class="score-display">Score: <span id="score">0</span></div>
+    <div class="streak-counter"><i class="fas fa-fire"></i> Série: <span id="streak">0</span></div>
+</div>
+
+        <!-- Question -->
+        <div class="question-container">
+            <div class="question" id="question">
+                <span id="number"></span> × <span id="multiplier"></span> = ?
+            </div>
+            <input type="number" id="answer" class="answer-input" autofocus>
+        </div>
+
+        <!-- Tableau de bord -->
+        <div class="game-dashboard">
+    <div class="dashboard-card">
+        <i class="fas fa-question-circle"></i>
+        <h4>Questions</h4>
+        <p id="questions-count">0</p>
+    </div>
+    <div class="dashboard-card">
+        <i class="fas fa-bullseye"></i>
+        <h4>Précision</h4>
+        <p id="accuracy">0%</p>
+    </div>
+    <div class="dashboard-card">
+        <i class="fas fa-trophy"></i>
+        <h4>Meilleure série</h4>
+        <p id="best-streak">0</p>
+    </div>
+</div>
+
+        <!-- Modal de fin de partie -->
+        <div class="game-over-modal" id="gameOverModal">
+            <div class="modal-content">
+                <h2>Partie terminée!</h2>
+                <div class="stars-display" id="starsEarned"></div>
+                <div class="results-grid">
+                    <div class="result-item">
+                        <h4>Score final</h4>
+                        <p id="finalScore">0</p>
                     </div>
-                    <div id="earnedBadges" class="earned-badges"></div>
-                    <h3>Meilleurs scores</h3>
-                    <table class="highscores-table">
-                        <thead>
-                            <tr>
-                                <th>Rang</th>
-                                <th>Joueur</th>
-                                <th>Score</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody id="highscoresList"></tbody>
-                    </table>
-                    <div class="modal-actions">
-                        <button class="btn btn-primary" onclick="startNewGame()">Rejouer</button>
-                        <a href="index.php" class="btn btn-secondary">Retour à l'accueil</a>
+                    <div class="result-item">
+                        <h4>Questions</h4>
+                        <p id="finalQuestions">0</p>
+                    </div>
+                    <div class="result-item">
+                        <h4>Précision</h4>
+                        <p id="finalAccuracy">0%</p>
                     </div>
                 </div>
+                <div id="earnedBadges" class="earned-badges"></div>
+                <h3>Meilleurs scores</h3>
+                <table class="highscores-table">
+                    <thead>
+                        <tr>
+                            <th>Rang</th>
+                            <th>Joueur</th>
+                            <th>Score</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="highscoresList"></tbody>
+                </table>
+                <button class="btn btn-primary mt-3" onclick="startNewGame()">Rejouer</button>
+                <a href="index.php" class="btn btn-secondary mt-3">Retour à l'accueil</a>
             </div>
         </div>
     </div>
@@ -748,10 +705,6 @@ async function submitFinalScore() {
 }
 
 function showGameOverModal(data) {
-        // Assurez-vous que le modal est visible et bien positionné
-        elements.gameOverModal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    document.body.classList.add('modal-open'); // Ajouter une classe pour gérer l'état
     const starsDisplay = document.getElementById('starsEarned');
     starsDisplay.innerHTML = '⭐'.repeat(data.stars);
     
@@ -810,7 +763,7 @@ function showGameOverModal(data) {
     `).join('');
 
     // Afficher le modal
-
+    elements.gameOverModal.style.display = 'block';
     
     // Jouer le son approprié selon le résultat
     if (data.dailyChallenge.completed) {
@@ -828,9 +781,6 @@ function getOrdinalSuffix(n) {
 
 // Modifier la fonction startNewGame
 async function startNewGame() {
-    document.body.style.overflow = 'auto';
-    document.body.classList.remove('modal-open');
-    elements.gameOverModal.style.display = 'none';
     try {
         // Réinitialiser tous les états
         if (gameState.timer) {
@@ -873,7 +823,28 @@ async function startNewGame() {
     }
 }
 
+// Démarrer le jeu au chargement de la page
+// document.addEventListener('DOMContentLoaded', function() {
+//    initGame();
+//    elements.answer.addEventListener('keyup', handleAnswer);
+//});
 
+// Au début du script, ajoutez :
+document.addEventListener('DOMContentLoaded', function() {
+    // Cacher le contenu du jeu au démarrage
+    document.querySelectorAll('.game-content').forEach(el => el.style.display = 'none');
+    
+    // Gérer le clic sur le bouton de démarrage
+    const startButton = document.getElementById('start-game');
+    startButton.addEventListener('click', function() {
+        // Cacher l'écran d'introduction
+        document.getElementById('intro-screen').style.display = 'none';
+        // Afficher le contenu du jeu
+        document.querySelectorAll('.game-content').forEach(el => el.style.display = 'block');
+        // Démarrer le jeu
+        initGame();
+    });
+});
 
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -892,71 +863,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Démarrer le jeu
         initGame();
     });
-
-    // Gestionnaire du pavé numérique
-    const numpad = document.getElementById('numpad');
-    if (numpad) {
-        numpad.addEventListener('click', function(e) {
-            const target = e.target;
-            
-            // Gérer les boutons numériques
-            if (target.classList.contains('num-btn')) {
-                const value = target.dataset.value;
-                const currentValue = elements.answer.value;
-                elements.answer.value = currentValue.length < 3 ? currentValue + value : currentValue;
-                e.preventDefault();
-            }
-            
-            // Gérer le bouton de correction
-            if (target.id === 'correct' || target.parentElement.id === 'correct') {
-                elements.answer.value = elements.answer.value.slice(0, -1);
-                e.preventDefault();
-            }
-            
-            // Gérer le bouton de validation
-            if (target.id === 'validate' || target.parentElement.id === 'validate') {
-                const event = new KeyboardEvent('keyup', {
-                    key: 'Enter',
-                    code: 'Enter',
-                    keyCode: 13,
-                    which: 13,
-                    bubbles: true
-                });
-                elements.answer.dispatchEvent(event);
-                e.preventDefault();
-            }
-        });
-    }
-
-    // Gestion conditionnelle du clavier selon le device
-    const isMobile = window.innerWidth <= 768;
-    
-    if (isMobile) {
-        // Sur mobile : désactiver le clavier natif
-        elements.answer.addEventListener('focus', function(e) {
-            e.preventDefault();
-            this.blur();
-        });
-        elements.answer.readOnly = true;
-    } else {
-        // Sur desktop : permettre la saisie au clavier
-        elements.answer.addEventListener('keyup', handleAnswer);
-        elements.answer.readOnly = false;
-    }
-
-    // Listener pour le redimensionnement de la fenêtre
-    window.addEventListener('resize', function() {
-        const isMobile = window.innerWidth <= 768;
-        if (isMobile) {
-            elements.answer.removeEventListener('keyup', handleAnswer);
-            elements.answer.readOnly = true;
-        } else {
-            elements.answer.addEventListener('keyup', handleAnswer);
-            elements.answer.readOnly = false;
-        }
-    });
 });
-
 
 </script>
 <?php include 'footer.php'; ?>

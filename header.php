@@ -9,6 +9,8 @@
     <!-- Ajouter dans le <head> de votre fichier -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <link rel="preload" href="public/css/vindigni.css?v=<?php echo time(); ?>" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<!-- Dans le head, après le lien vers vindigni.css -->
+<link rel="stylesheet" href="public/css/challenge.css">
 
     <style>
         body {
@@ -50,13 +52,9 @@
     <div class="container">
         <?php if (isset($_COOKIE['SSOwAuthUser'])): ?>
             <span class="navbar-brand">
-                🔨thérapie pour <?php echo htmlspecialchars($_COOKIE['SSOwAuthUser']); ?>
+                Salut <?php echo htmlspecialchars($_COOKIE['SSOwAuthUser']); ?>
             </span>
-            <form class="d-inline-block ms-2" action="logout.php" method="POST">
-                <button type="submit" class="btn btn-outline-light btn-sm">
-                    <i class="fas fa-sign-out-alt"></i> Déconnexion
-                </button>
-            </form>
+
         <?php else: ?>
             <a class="navbar-brand" href="index.php">🔨thérapie</a>
         <?php endif; ?>
@@ -73,10 +71,13 @@
                     <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'practice.php' ? 'active' : ''; ?>" href="practice.php">Entraînement</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'challenge.php' ? 'active' : ''; ?>" href="challenge.php">Challenge</a>
+                    <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'challenge2.php' ? 'active' : ''; ?>" href="challenge2.php">Challenge</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'progress.php' ? 'active' : ''; ?>" href="progress.php">Progression</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'progress.php' ? 'active' : ''; ?>" href="logout.php"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
                 </li>
             </ul>
         </div>

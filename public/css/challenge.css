@@ -1,110 +1,386 @@
-.game-container {
-    max-width: 800px;
-    margin: 0 auto;
-    position: relative;
+/* Variables spécifiques au challenge */
+:root {
+    --accent-gradient: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+    --accent-color: #4ECDC4;
+    --warning-color: #FF6B6B;
+    --card-hover: rgba(255, 255, 255, 0.15);
+    
+    /* Variables responsive */
+    --container-padding: clamp(1rem, 3vw, 2rem);
+    --font-size-base: clamp(1rem, 2.5vw, 1.2rem);
+    --font-size-large: clamp(1.5rem, 4vw, 2.5rem);
+    --font-size-xl: clamp(2rem, 6vw, 4rem);
+    --card-padding: clamp(1rem, 3vw, 1.5rem);
 }
 
-.game-header {
+/* Style global pour la page challenge */
+html.challenge-page, 
+body.challenge-page {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow-x: hidden;
+}
+
+body.challenge-page {
+    padding-top: 56px !important;
+    margin: 0;
+    min-height: 100vh;
+}
+
+/* États spéciaux du body */
+body.challenge-page.intro-visible,
+body.challenge-page.modal-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+}
+
+/* Contenu du jeu */
+.challenge-page .game-content {
+    opacity: 1;
+    display: block;
+    width: 100%;
+    visibility: visible;
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: var(--card-padding);
+    margin-bottom: 2rem;
+}
+
+/* Écran d'introduction */
+.challenge-page .intro-screen {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: var(--primary-gradient);
+    z-index: 99999;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
+    align-items: flex-start;
+    justify-content: center;
     padding: 1rem;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
 }
 
-.timer {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #dc3545;
+.challenge-page .intro-content {
+    width: min(90%, 900px);
+    margin: 1rem auto;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: var(--border-radius);
+    padding: 2rem 1.5rem;
+    box-shadow: var(--shadow);
+    overflow-y: auto;
+    max-height: calc(100vh - 2rem);
 }
 
-.timer.warning {
-    animation: pulse 1s infinite;
-}
-
-.score-display {
-    font-size: 1.5rem;
-    color: #28a745;
-}
-
-.streak-counter {
-    font-size: 1.2rem;
-    color: #007bff;
-}
-
-.question-container {
+/* En-tête de l'intro */
+.challenge-page .intro-header {
     text-align: center;
-    padding: 2rem;
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
     margin-bottom: 2rem;
 }
 
-.question {
-    font-size: 3rem;
-    margin-bottom: 1.5rem;
-    color: #343a40;
+.challenge-page .title {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
-.answer-input {
-    font-size: 2rem;
-    width: 200px;
-    text-align: center;
+.challenge-page .subtitle {
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    color: var(--text-secondary);
+}
+
+/* Règles et instructions */
+.challenge-page .rules-container {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--border-radius);
+    padding: var(--card-padding);
+    margin-bottom: 2rem;
+}
+
+.challenge-page .section-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.challenge-page .section-title i {
+    font-size: 1.5rem;
+    color: var(--accent-color);
+}
+/* Listes et cartes */
+.challenge-page .fancy-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.challenge-page .fancy-list li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
     margin-bottom: 1rem;
-    padding: 0.5rem;
-    border: 3px solid #007bff;
+    padding: clamp(0.8rem, 2vw, 1rem);
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 10px;
     transition: all 0.3s ease;
 }
 
-.answer-input:focus {
-    border-color: #0056b3;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
-.points-popup {
-    position: absolute;
-    font-size: 1.5rem;
-    font-weight: bold;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.game-dashboard {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.dashboard-card {
-    background: white;
-    padding: 1rem;
-    border-radius: 10px;
+.challenge-page .fancy-list i {
+    color: var(--accent-color);
+    width: 1.5rem;
     text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.stars-display {
+/* Grille de points */
+.challenge-page .points-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: clamp(1rem, 2vw, 1.5rem);
+    margin-top: 1.5rem;
+}
+
+.challenge-page .point-card {
+    background: var(--card-bg);
+    padding: var(--card-padding);
+    border-radius: var(--border-radius);
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.challenge-page .point-card i {
     font-size: 2rem;
-    color: #ffc107;
+    color: var(--accent-color);
     margin-bottom: 1rem;
 }
 
-/* Animations */
-@keyframes slideUp {
-    0% { transform: translateY(0); opacity: 1; }
-    100% { transform: translateY(-50px); opacity: 0; }
+.challenge-page .point-card h4 {
+    margin: 0.5rem 0;
+    color: var(--text-primary);
 }
 
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
+.challenge-page .point-card p {
+    font-size: var(--font-size-large);
+    font-weight: bold;
+    margin: 0.5rem 0;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.challenge-page .point-card small {
+    color: var(--text-secondary);
+}
+
+/* Indicateur de difficulté */
+.challenge-page .difficulty-indicator {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin: 2rem 0;
+    text-align: center;
+}
+
+.challenge-page .difficulty-label {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.challenge-page .difficulty-label .badge {
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-left: 0.5rem;
+}
+
+/* Bouton de démarrage */
+.challenge-page .start-button {
+    display: block;
+    width: min(300px, 90%);
+    margin: 2rem auto 1rem;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: white;
+    background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    text-align: center;
+}
+
+.challenge-page .start-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+/* Défi quotidien */
+.challenge-page .daily-challenge {
+    background: linear-gradient(45deg, #FF6B6B, #cc2e5d);
+    padding: var(--card-padding);
+    border-radius: 0;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 2rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.challenge-page .daily-challenge h3 {
+    color: white;
+    margin-bottom: 1rem;
+    font-size: clamp(1.4rem, 3vw, 1.8rem);
+}
+/* Header du jeu */
+.challenge-page .game-header {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    padding: var(--card-padding);
+    border-radius: 0;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+    text-align: center;
+}
+
+.challenge-page .timer {
+    font-size: var(--font-size-large);
+    font-weight: bold;
+    color: var(--warning-color);
+    text-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
+}
+
+.challenge-page .score-display {
+    font-size: var(--font-size-base);
+    color: var(--accent-color);
+}
+
+.challenge-page .streak-counter {
+    font-size: var(--font-size-base);
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Container de questions */
+.challenge-page .question-container {
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    padding: var(--card-padding);
+    border-radius: 0;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    text-align: center;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+}
+
+.challenge-page .question {
+    font-size: var(--font-size-xl);
+    margin-bottom: 2rem;
+    color: var(--text-primary);
+}
+
+.challenge-page .answer-input {
+    width: min(200px, 90%);
+    font-size: var(--font-size-large);
+    text-align: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid var(--accent-color);
+    color: var(--text-primary);
+    padding: 0.8rem;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+}
+
+.challenge-page .answer-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.3);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Dashboard */
+.challenge-page .game-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    border-radius: 0;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.challenge-page .dashboard-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    padding: var(--card-padding);
+    border-radius: var(--border-radius);
+    text-align: center;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.challenge-page .dashboard-card i {
+    font-size: 1.5rem;
+    color: var(--accent-color);
+    margin-bottom: 0.5rem;
+}
+
+.challenge-page .dashboard-card h4 {
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.challenge-page .dashboard-card p {
+    font-size: var(--font-size-large);
+    color: var(--accent-color);
+    margin: 0;
+}
+
+/* Points animation */
+.challenge-page .points-popup {
+    position: absolute;
+    font-size: var(--font-size-large);
+    font-weight: bold;
+    color: var(--accent-color);
+    text-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    animation: slideUp 1s ease-out forwards;
+}
+
+@keyframes slideUp {
+    0% { 
+        transform: translateY(0); 
+        opacity: 1; 
+    }
+    100% { 
+        transform: translateY(-50px); 
+        opacity: 0; 
+    }
+}
+
+.challenge-page .answer-input.shake {
+    animation: shake 0.5s;
 }
 
 @keyframes shake {
@@ -113,62 +389,215 @@
     75% { transform: translateX(5px); }
 }
 
+.challenge-page .timer.warning {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
 /* Modal de fin de partie */
-.game-over-modal {
+.challenge-page .game-over-modal {
     display: none;
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: 1000;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 99999;
+    padding: 0;  /* Enlever le padding ici */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
-.modal-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 2rem;
-    border-radius: 15px;
-    width: 90%;
+.challenge-page .game-over-modal.active {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.challenge-page .game-over-modal .modal-content {
+    background: var(--primary-gradient);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    width: 100%;  /* Prendre toute la largeur sur mobile */
     max-width: 600px;
+    margin: 0 auto;  /* Centrer horizontalement */
+    color: white;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    min-height: 100%;  /* S'assurer qu'il prend toute la hauteur */
+}
+
+.challenge-page .stars-display {
+    font-size: clamp(2rem, 5vw, 3rem);
+    margin: 1rem 0;
+    text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
     text-align: center;
 }
 
-.results-grid {
+/* Grille des résultats */
+.challenge-page .results-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: 1rem;
     margin: 1.5rem 0;
 }
 
-.result-item {
-    background: #f8f9fa;
-    padding: 1rem;
-    border-radius: 8px;
+.challenge-page .result-item {
+    background: var(--card-bg);
+    padding: var(--card-padding);
+    border-radius: var(--border-radius);
 }
 
 /* Tableau des scores */
-.highscores-table {
+.challenge-page .highscores-table {
     width: 100%;
-    margin-top: 1.5rem;
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    margin-top: 2rem;
     border-collapse: collapse;
 }
 
-.highscores-table th,
-.highscores-table td {
-    padding: 0.75rem;
-    border-bottom: 1px solid #dee2e6;
+.challenge-page .highscores-table th {
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text-secondary);
+    padding: 1rem;
+    text-align: left;
 }
 
-.badge-earned {
-    animation: fadeInScale 0.5s ease-out;
+.challenge-page .highscores-table td {
+    padding: 1rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-@keyframes fadeInScale {
+/* Media Queries */
+@media (max-width: 768px) {
+    .challenge-page .intro-screen,
+    .challenge-page .game-over-modal {
+        padding: 0.5rem;
+    }
+
+    .challenge-page .modal-content {
+        padding: 1.5rem;
+        width: 95%;
+        margin: 1rem auto;
+    }
+
+    .challenge-page .game-header {
+        grid-template-columns: 1fr;
+    }
+
+    .challenge-page .start-button {
+        width: 100%;
+        margin: 1.5rem auto;
+    }
+
+    .challenge-page .intro-content {
+        padding: 1.5rem 1rem;
+        margin: 0.5rem auto;
+    }
+
+    .challenge-page .points-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .challenge-page .fancy-list li {
+        padding: 0.75rem;
+    }
+
+    .challenge-page .highscores-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .challenge-page .game-container {
+        max-width: 100%;
+        margin: 1rem 0;
+        padding: 0.5rem;
+    }
+
+    .challenge-page .game-content {
+        width: 100%;
+        margin: 0;
+        border-radius: 0;
+        padding: 1rem 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .challenge-page .intro-screen {
+        height: auto;
+        min-height: 100%;
+    }
+
+    .challenge-page .intro-header h1.title {
+        font-size: 1.75rem;
+    }
+
+    .challenge-page .intro-header .subtitle {
+        font-size: 0.9rem;
+    }
+
+    .challenge-page .modal-content {
+        padding: 1rem;
+        width: 98%;
+    }
+}
+
+/* Optimisations performances */
+@media (prefers-reduced-motion: reduce) {
+    .challenge-page * {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+
+/* Classes utilitaires spécifiques au challenge */
+.challenge-page .game-content {
+    opacity: 1 !important; /* Forcer l'opacité */
+    display: block;
+    visibility: visible;
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: var(--card-padding);
+    margin-bottom: 2rem;
+}
+
+/* S'assurer que le contenu est visible quand affiché */
+.challenge-page .game-content[style*="display: block"] {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.challenge-page .game-content.visible {
+    opacity: 1;
+}
+
+/* Badge et résultats du challenge */
+.challenge-page .badge-earned {
+    display: inline-block;
+    margin: 10px;
+    text-align: center;
+    animation: badgeAppear 0.5s ease-out;
+}
+
+.challenge-page .daily-challenge-results {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: var(--card-padding);
+    margin-top: 1.5rem;
+}
+
+@keyframes badgeAppear {
     from {
         opacity: 0;
         transform: scale(0.5);
@@ -178,226 +607,91 @@
         transform: scale(1);
     }
 }
-
-/* Daily Challenge Banner */
-.daily-challenge {
-    background: linear-gradient(45deg, #ff6b6b, #cc2e5d);
-    color: white;
-    padding: 1rem;
-    border-radius: 10px;
-    margin-bottom: 2rem;
-    text-align: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.badge-earned {
-    display: inline-block;
-    margin: 10px;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 10px;
-    text-align: center;
-}
-
-.badge-earned i {
-    font-size: 2rem;
-    margin-bottom: 10px;
-}
-
-.badge-earned p {
-    margin: 5px 0;
-    font-weight: bold;
-}
-
-.badge-earned small {
-    display: block;
-    color: #6c757d;
-}
-
-.badges-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 15px;
-    margin: 20px 0;
-}
-
-.intro-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    color: white;
-}
-
-.intro-content {
-    max-width: 900px;
-    width: 100%;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 2rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.intro-header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.title {
-    font-size: 3rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.subtitle {
-    font-size: 1.2rem;
-    color: #ffffff99;
-}
-
-.rules-container {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 15px;
-    padding: 2rem;
-    margin-bottom: 2rem;
-}
-
-.section-title {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.section-title i {
-    font-size: 1.5rem;
-    color: #4ECDC4;
-}
-
-.section-title h3 {
-    margin: 0;
-    font-size: 1.5rem;
-}
-
-.fancy-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.fancy-list li {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-    transition: all 0.3s ease;
-}
-
-.fancy-list li:hover {
-    transform: translateX(10px);
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.fancy-list i {
-    color: #4ECDC4;
-}
-
-.points-grid {
+/* Pavé numérique */
+.challenge-page .numpad-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1.5rem;
-}
-
-.point-card {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 1.5rem;
-    border-radius: 15px;
-    text-align: center;
-    transition: all 0.3s ease;
-}
-
-.point-card:hover {
-    transform: translateY(-5px);
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.point-card i {
-    font-size: 2rem;
-    color: #4ECDC4;
-    margin-bottom: 1rem;
-}
-
-.point-card h4 {
-    margin: 0.5rem 0;
-    color: #fff;
-}
-
-.point-card p {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin: 0.5rem 0;
-    color: #FF6B6B;
-}
-
-.point-card small {
-    color: #ffffff99;
-}
-
-.start-button {
-    display: block;
-    width: 100%;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-top: 1rem;
     max-width: 300px;
-    margin: 2rem auto 0;
-    padding: 1rem 2rem;
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: white;
-    background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    padding: 0 0.5rem;
+}
+
+.challenge-page .num-btn,
+.challenge-page .control-btn {
+    padding: 1rem;
+    font-size: 1.25rem;
     border: none;
-    border-radius: 50px;
+    border-radius: var(--border-radius);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    transition: all 0.2s ease;
+    backdrop-filter: blur(5px);
+    height: 60px; /* Hauteur fixe pour de meilleurs ratios */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.start-button:hover {
+.challenge-page .num-btn:hover,
+.challenge-page .control-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
 }
 
-.start-button:active {
+.challenge-page .num-btn:active,
+.challenge-page .control-btn:active {
     transform: translateY(1px);
 }
 
-.start-button i {
-    margin-right: 0.5rem;
+.challenge-page .control-btn {
+    grid-column: span 1.5;
 }
 
+.challenge-page .correct-btn {
+    background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+}
+
+.challenge-page .validate-btn {
+    background: linear-gradient(45deg, #4ECDC4, #45B7AF);
+}
+
+/* Adapter pour mobile */
 @media (max-width: 768px) {
-    .intro-content {
-        padding: 1.5rem;
+    .challenge-page .numpad-container {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .challenge-page .num-btn,
+    .challenge-page .control-btn {
+        padding: 1.2rem;
+        font-size: 1.5rem;
     }
     
-    .points-grid {
-        grid-template-columns: 1fr;
+    .challenge-page .answer-input {
+        pointer-events: none;
+        background: rgba(255, 255, 255, 0.05);
     }
-    
-    .title {
-        font-size: 2rem;
+}
+
+/* Ajustements pour très petits écrans */
+@media (max-width: 380px) {
+    .challenge-page .game-container {
+        padding: 0;
+    }
+
+    .challenge-page .game-content {
+        padding: 0.5rem 0.25rem;
+    }
+
+    .challenge-page .num-btn,
+    .challenge-page .control-btn {
+        height: 50px; /* Un peu plus petit pour très petits écrans */
+        font-size: 1.2rem;
     }
 }
