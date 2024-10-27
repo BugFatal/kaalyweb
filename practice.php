@@ -254,7 +254,7 @@ include 'header.php';
                         <?php if ($specificTable): ?>
                             <a href="table.php?number=<?php echo $tableNumber; ?>" class="btn btn-info">Voir la table</a>
                         <?php endif; ?>
-                        <a href="progress.php" class="btn btn-info">Voir ma progression détaillée</a>
+                        <a href="progress.php" class="btn btn-primary">Voir ma progression détaillée</a>
                         <div class="text-center mt-3">
                         <a href="index.php" class="btn btn-primary">Retour à l'accueil</a>
                         </div>

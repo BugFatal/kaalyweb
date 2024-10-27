@@ -27,7 +27,7 @@ $stmt = $pdo->prepare("
     FROM challenge_scores 
     WHERE DATE(date_played) = CURDATE()
     ORDER BY score DESC 
-    LIMIT 20
+    LIMIT 5
 ");
 $stmt->execute();
 $dailyTopScores = $stmt->fetchAll();
@@ -51,16 +51,18 @@ $dailyTopScores = $stmt->fetchAll();
     </div>
 </div>
 
-<!-- Section Challenge du jour -->
-<div class="row mt-4 mb-4">
+<!-- Section contenant les deux cartes pour un affichage côte à côte sur les grands écrans -->
+<div class="row mt-4 mb-2">
+    <!-- Carte du Challenge du Jour -->
     <div class="col-md-6 mb-3">
-        <div class="card h-100 challenge-card">
-            <div class="card-body">
-                <h4 class="card-title">
+        <div class="card h-100 score-card">
+            <div class="card-header">
+                <h4 class="title">
                     <i class="fas fa-trophy text-warning"></i> 
                     Challenge du Jour
                 </h4>
-                <div class="challenge-info">
+                </div>
+                <div class="card-body">
                     <p class="challenge-description">
                         <?php echo htmlspecialchars($dailyChallenge['description']); ?>
                     </p>
@@ -76,10 +78,7 @@ $dailyTopScores = $stmt->fetchAll();
                         <div class="detail-item">
                             <i class="fas fa-signal"></i>
                             <span>Difficulté: 
-                                <?php 
-                                    $difficulties = ['easy' => 'Facile', 'medium' => 'Moyen', 'hard' => 'Difficile'];
-                                    echo $difficulties[$dailyChallenge['difficulty']] ?? 'Normal';
-                                ?>
+                                <?php echo $difficulties[$dailyChallenge['difficulty']] ?? 'Normal'; ?>
                             </span>
                         </div>
                     </div>
@@ -89,44 +88,44 @@ $dailyTopScores = $stmt->fetchAll();
                 </div>
             </div>
         </div>
-    </div>
+ 
+
     
+<!-- Carte des Meilleurs Scores du Jour -->
+
     <div class="col-md-6 mb-3">
-        <div class="card h-100 leaderboard-card">
-            <div class="card-body">
-                <h4 class="card-title">
-                    <i class="fas fa-crown text-warning"></i> 
-                    Meilleurs scores du jour
+        <div class="card h-100 score-card">
+            <div class="card-header">
+                <h4 class="title">
+                    <i class="fas fa-crown text-warning"></i> Meilleurs scores du jour
                 </h4>
-                <?php if (empty($dailyTopScores)): ?>
-                    <div class="text-center py-4">
+            </div>
+            <div class="card-body">
+                <?php
+                // Définition du tableau des médailles
+                $medals = ['🥇', '🥈', '🥉'];
+
+                if (empty($dailyTopScores)): ?>
+                    <div class="empty-message">
                         <i class="fas fa-hourglass-start fa-2x mb-3 text-muted"></i>
-                        <p class="lead">Soyez le premier à réaliser un score aujourd'hui !</p>
+                        <p>Soyez le premier à réaliser un score aujourd'hui !</p>
                     </div>
                 <?php else: ?>
-                    <div class="leaderboard-list">
+                    <ul class="score-list">
                         <?php foreach ($dailyTopScores as $index => $score): ?>
-                            <div class="leaderboard-item">
-                                <div class="rank">
-                                    <?php 
-                                        $medals = ['🥇', '🥈', '🥉'];
-                                        echo $index <= 2 ? $medals[$index] : ($index + 1);
-                                    ?>
-                                </div>
-                                <div class="player">
-                                    <?php echo htmlspecialchars($score['user_id']); ?>
-                                </div>
-                                <div class="score">
-                                    <?php echo number_format($score['score']); ?> pts
-                                </div>
-                            </div>
+                            <li class="score-item">
+                                <span class="rank"><?php echo $index < 3 ? $medals[$index] : $index + 1; ?></span>
+                                <span class="player-name"><?php echo htmlspecialchars($score['user_id']); ?></span>
+                                <span class="score-points"><?php echo number_format($score['score']); ?> pts</span>
+                            </li>
                         <?php endforeach; ?>
-                    </div>
+                    </ul>
                 <?php endif; ?>
             </div>
         </div>
     </div>
-</div>
+
+
 
 <!-- Tableau de toutes les tables -->
 <div class="card mb-4">
@@ -155,11 +154,6 @@ $dailyTopScores = $stmt->fetchAll();
         </div>
     </div>
 </div>
-
-
-
-
-
 
 <!-- Script pour mettre en surbrillance les lignes et colonnes -->
 <script>
@@ -201,5 +195,6 @@ document.addEventListener('DOMContentLoaded', function() {
     table.addEventListener('mouseleave', clearHighlights);
 });
 </script>
+</div> <!-- Fermeture du container principal -->
 
 <?php include 'footer.php'; ?>

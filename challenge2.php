@@ -220,50 +220,49 @@ include 'header.php';
                 </div>
             </div>
 
-            <!-- Contenu du jeu -->
-            <div class="game-content" style="display: none;">
-                <!-- Défi quotidien -->
-                <div class="daily-challenge">
-                    <h3>Défi du Jour</h3>
-                    <p><?php echo htmlspecialchars($dailyChallenge['description']); ?></p>
-                    <p>Objectif : <?php echo number_format($dailyChallenge['target_score']); ?> points</p>
-                </div>
-
-                <!-- En-tête du jeu -->
-                <div class="game-header">
-                    <div class="timer" id="timer"><i class="fas fa-clock"></i> 2:00</div>
-                    <div class="score-display">Score: <span id="score">0</span></div>
-                    <div class="streak-counter"><i class="fas fa-fire"></i> Série: <span id="streak">0</span></div>
-                </div>
-
-                <!-- Question -->
+         <!-- Contenu du jeu -->
+         <div class="game-content" style="display: none;">
+                <!-- Question et pavé numérique -->
                 <div class="question-container">
-    <div class="question" id="question">
-        <span id="number"></span> × <span id="multiplier"></span> = ?
-    </div>
-    <input type="number" id="answer" class="answer-input" readonly>
-    <div id="numpad" class="numpad-container">
-        <button class="num-btn" data-value="1">1</button>
-        <button class="num-btn" data-value="2">2</button>
-        <button class="num-btn" data-value="3">3</button>
-        <button class="num-btn" data-value="4">4</button>
-        <button class="num-btn" data-value="5">5</button>
-        <button class="num-btn" data-value="6">6</button>
-        <button class="num-btn" data-value="7">7</button>
-        <button class="num-btn" data-value="8">8</button>
-        <button class="num-btn" data-value="9">9</button>
-        <button class="num-btn" data-value="0">0</button>
-        <button class="control-btn correct-btn" id="correct">
-            <i class="fas fa-backspace"></i>
-        </button>
-        <button class="control-btn validate-btn" id="validate">
-            <i class="fas fa-check"></i>
-        </button>
-    </div>
-</div>
+                    <div class="question" id="question">
+                        <span id="number"></span> × <span id="multiplier"></span> = ?
+                    </div>
+                    <input type="number" id="answer" class="answer-input" readonly>
+                    <div id="numpad" class="numpad-container">
+                        <button class="num-btn" data-value="1">1</button>
+                        <button class="num-btn" data-value="2">2</button>
+                        <button class="num-btn" data-value="3">3</button>
+                        <button class="num-btn" data-value="4">4</button>
+                        <button class="num-btn" data-value="5">5</button>
+                        <button class="num-btn" data-value="6">6</button>
+                        <button class="num-btn" data-value="7">7</button>
+                        <button class="num-btn" data-value="8">8</button>
+                        <button class="num-btn" data-value="9">9</button>
+                        <button class="num-btn" data-value="0">0</button>
+                        <button class="control-btn correct-btn" id="correct">
+                            <i class="fas fa-backspace"></i>
+                        </button>
+                        <button class="control-btn validate-btn" id="validate">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                </div>
 
-                <!-- Tableau de bord -->
-                <div class="game-dashboard">
+                <!-- Stats sur mobile -->
+                <div class="game-stats-mobile">
+                    <div class="timer" id="timer">
+                        <i class="fas fa-clock"></i> 2:00
+                    </div>
+                    <div class="score-display">
+                        Score: <span id="score">0</span>
+                    </div>
+                    <div class="streak-counter">
+                        <i class="fas fa-fire"></i> Série: <span id="streak">0</span>
+                    </div>
+                </div>
+
+                <!-- Dashboard (desktop seulement) -->
+                <div class="game-dashboard desktop-only">
                     <div class="dashboard-card">
                         <i class="fas fa-question-circle"></i>
                         <h4>Questions</h4>
@@ -282,47 +281,62 @@ include 'header.php';
                 </div>
             </div>
 
-            <!-- Modal de fin de partie -->
-            <div class="game-over-modal" id="gameOverModal">
-                <div class="modal-content">
-                    <h2>Partie terminée!</h2>
-                    <div class="stars-display" id="starsEarned"></div>
-                    <div class="results-grid">
-                        <div class="result-item">
-                            <h4>Score final</h4>
-                            <p id="finalScore">0</p>
-                        </div>
-                        <div class="result-item">
-                            <h4>Questions</h4>
-                            <p id="finalQuestions">0</p>
-                        </div>
-                        <div class="result-item">
-                            <h4>Précision</h4>
-                            <p id="finalAccuracy">0%</p>
-                        </div>
-                    </div>
-                    <div id="earnedBadges" class="earned-badges"></div>
-                    <h3>Meilleurs scores</h3>
-                    <table class="highscores-table">
-                        <thead>
-                            <tr>
-                                <th>Rang</th>
-                                <th>Joueur</th>
-                                <th>Score</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody id="highscoresList"></tbody>
-                    </table>
-                    <div class="modal-actions">
-                        <button class="btn btn-primary" onclick="startNewGame()">Rejouer</button>
-                        <a href="index.php" class="btn btn-secondary">Retour à l'accueil</a>
-                    </div>
-                </div>
+            <!-- Défi quotidien -->
+            <div class="daily-challenge">
+                <h3>Défi du Jour</h3>
+                <p><?php echo htmlspecialchars($dailyChallenge['description']); ?></p>
+                <p>Objectif : <?php echo number_format($dailyChallenge['target_score']); ?> points</p>
             </div>
         </div>
+
+<!-- Modal de fin de partie -->
+<div class="game-over-modal" id="gameOverModal">
+    <div class="modal-content">
+        <h2>Partie terminée!</h2>
+        <div class="stars-display" id="starsEarned"></div>
+        
+        <div class="results-grid">
+            <div class="result-item">
+                <h4>Score final</h4>
+                <p id="finalScore">0</p>
+            </div>
+            <div class="result-item">
+                <h4>Questions</h4>
+                <p id="finalQuestions">0</p>
+            </div>
+            <div class="result-item">
+                <h4>Précision</h4>
+                <p id="finalAccuracy">0%</p>
+            </div>
+        </div>
+        
+        <div class="modal-actions">
+            <button class="btn btn-primary" onclick="startNewGame()">Rejouer</button>
+            <a href="index.php" class="btn btn-secondary">Retour à l'accueil</a>
+        </div>
+        
+        <div id="earnedBadges" class="earned-badges"></div>
+        
+        <div class="highscores-section">
+            <h3>Meilleurs scores</h3>
+            <div class="highscores-table-wrapper">
+                <table class="highscores-table">
+                    <thead>
+                        <tr>
+                            <th>Rang</th>
+                            <th>Joueur</th>
+                            <th>Score</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="highscoresList"></tbody>
+                </table>
+            </div>
+        </div>
+        
     </div>
 </div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
 <script>
 // Configuration du jeu
@@ -874,89 +888,264 @@ async function startNewGame() {
 }
 
 
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Ajouter la classe au body quand l'intro est visible
-    document.body.classList.add('intro-visible');
-    
-    // Gérer le clic sur le bouton de démarrage
-    const startButton = document.getElementById('start-game');
-    startButton.addEventListener('click', function() {
-        // Cacher l'écran d'introduction
-        document.getElementById('intro-screen').style.display = 'none';
-        // Réactiver le scroll du body
-        document.body.classList.remove('intro-visible');
-        // Afficher le contenu du jeu
-        document.querySelectorAll('.game-content').forEach(el => el.style.display = 'block');
-        // Démarrer le jeu
-        initGame();
-    });
-
-    // Gestionnaire du pavé numérique
+// Gestionnaire du pavé numérique
+// Gestionnaire du pavé numérique
+// Gestionnaire du pavé numérique
+const initNumpad = () => {
     const numpad = document.getElementById('numpad');
-    if (numpad) {
-        numpad.addEventListener('click', function(e) {
-            const target = e.target;
-            
-            // Gérer les boutons numériques
-            if (target.classList.contains('num-btn')) {
-                const value = target.dataset.value;
-                const currentValue = elements.answer.value;
-                elements.answer.value = currentValue.length < 3 ? currentValue + value : currentValue;
-                e.preventDefault();
-            }
-            
-            // Gérer le bouton de correction
-            if (target.id === 'correct' || target.parentElement.id === 'correct') {
-                elements.answer.value = elements.answer.value.slice(0, -1);
-                e.preventDefault();
-            }
-            
-            // Gérer le bouton de validation
-            if (target.id === 'validate' || target.parentElement.id === 'validate') {
-                const event = new KeyboardEvent('keyup', {
-                    key: 'Enter',
-                    code: 'Enter',
-                    keyCode: 13,
-                    which: 13,
-                    bubbles: true
-                });
-                elements.answer.dispatchEvent(event);
-                e.preventDefault();
-            }
-        });
+    const answer = document.getElementById('answer');
+    const gameContainer = document.querySelector('.game-container');
+    
+    if (!numpad || !answer) {
+        console.error('Elements numpad or answer not found');
+        return;
     }
 
-    // Gestion conditionnelle du clavier selon le device
+    let touchStartTime = 0;
+    let isTouchActive = false;
+    const tapThreshold = 300; // ms pour distinguer un tap d'un scroll
+
+    // Fonction pour gérer l'entrée numérique
+    const handleNumericInput = (value) => {
+        const currentValue = answer.value;
+        if (currentValue.length < 3) {
+            answer.value = currentValue + value;
+        }
+    };
+
+    // Fonction pour gérer la correction
+    const handleCorrection = () => {
+        answer.value = answer.value.slice(0, -1);
+    };
+
+    // Fonction pour gérer la validation
+    const handleValidation = () => {
+        if (answer.value.trim() === '') return;
+        
+        const event = new KeyboardEvent('keyup', {
+            key: 'Enter',
+            code: 'Enter',
+            keyCode: 13,
+            which: 13,
+            bubbles: true,
+            cancelable: true
+        });
+        answer.dispatchEvent(event);
+    };
+
+    // Gestionnaire du feedback visuel
+    const addButtonFeedback = (button) => {
+        button.classList.add('active');
+        requestAnimationFrame(() => {
+            button.classList.add('button-press');
+        });
+    };
+
+    const removeButtonFeedback = (button) => {
+        button.classList.remove('active', 'button-press');
+    };
+
+    // Gestionnaire de début de toucher
+    const handleTouchStart = (e) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+
+        e.preventDefault();
+        touchStartTime = Date.now();
+        isTouchActive = true;
+
+        addButtonFeedback(target);
+    };
+
+    // Gestionnaire de fin de toucher
+    const handleTouchEnd = (e) => {
+        const target = e.target.closest('button');
+        if (!target || !isTouchActive) return;
+
+        e.preventDefault();
+        isTouchActive = false;
+
+        const touchDuration = Date.now() - touchStartTime;
+        removeButtonFeedback(target);
+
+        // Ne traiter que les taps courts
+        if (touchDuration < tapThreshold) {
+            if (window.gameState?.gameEnded) return;
+
+            // Traiter l'action du bouton avec un petit délai pour l'animation
+            setTimeout(() => {
+                if (target.classList.contains('num-btn')) {
+                    handleNumericInput(target.dataset.value);
+                } else if (target.id === 'correct' || target.classList.contains('correct-btn')) {
+                    handleCorrection();
+                } else if (target.id === 'validate' || target.classList.contains('validate-btn')) {
+                    handleValidation();
+                }
+            }, 50);
+        }
+    };
+
+    // Gestionnaire de mouvement
+    const handleTouchMove = (e) => {
+        if (!isTouchActive) return;
+        
+        const target = e.target.closest('button');
+        if (target) {
+            removeButtonFeedback(target);
+        }
+    };
+
+    // Gestionnaire de clic (pour desktop)
+    const handleClick = (e) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+
+        e.preventDefault();
+        if (window.gameState?.gameEnded) return;
+
+        addButtonFeedback(target);
+        
+        // Traiter l'action du bouton
+        setTimeout(() => {
+            if (target.classList.contains('num-btn')) {
+                handleNumericInput(target.dataset.value);
+            } else if (target.id === 'correct' || target.classList.contains('correct-btn')) {
+                handleCorrection();
+            } else if (target.id === 'validate' || target.classList.contains('validate-btn')) {
+                handleValidation();
+            }
+            removeButtonFeedback(target);
+        }, 50);
+    };
+
+    // Empêcher le scroll sur le container en mode jeu
+    const preventScroll = (e) => {
+        if (gameContainer.contains(e.target)) {
+            e.preventDefault();
+        }
+    };
+
+    // Nettoyer les listeners existants
+    const clearExistingListeners = () => {
+        const clone = numpad.cloneNode(true);
+        numpad.parentNode.replaceChild(clone, numpad);
+        return clone;
+    };
+
+    // Initialiser le nouveau pavé
+    const newNumpad = clearExistingListeners();
+
+    // Ajouter les écouteurs d'événements
+    newNumpad.addEventListener('touchstart', handleTouchStart, { passive: false });
+    newNumpad.addEventListener('touchend', handleTouchEnd, { passive: false });
+    newNumpad.addEventListener('touchmove', handleTouchMove, { passive: true });
+    newNumpad.addEventListener('click', handleClick);
+
+    // Empêcher le scroll pendant le jeu sur mobile
+    if (window.innerWidth <= 768) {
+        gameContainer.addEventListener('touchmove', preventScroll, { passive: false });
+        document.body.style.position = 'fixed';
+        document.body.style.width = '100%';
+    }
+
+    // Gérer la perte de focus
+    const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+            newNumpad.querySelectorAll('button').forEach(button => {
+                removeButtonFeedback(button);
+            });
+        }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Retourner la fonction de nettoyage
+    return () => {
+        newNumpad.removeEventListener('touchstart', handleTouchStart);
+        newNumpad.removeEventListener('touchend', handleTouchEnd);
+        newNumpad.removeEventListener('touchmove', handleTouchMove);
+        newNumpad.removeEventListener('click', handleClick);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        if (window.innerWidth <= 768) {
+            gameContainer.removeEventListener('touchmove', preventScroll);
+            document.body.style.position = '';
+            document.body.style.width = '';
+        }
+    };
+};
+
+// Modifier la fonction handleDeviceInput pour être plus stricte sur mobile
+const handleDeviceInput = () => {
+    const answer = document.getElementById('answer');
     const isMobile = window.innerWidth <= 768;
     
-    if (isMobile) {
-        // Sur mobile : désactiver le clavier natif
-        elements.answer.addEventListener('focus', function(e) {
-            e.preventDefault();
-            this.blur();
+    if (answer) {
+        if (isMobile) {
+            answer.removeEventListener('keyup', handleAnswer);
+            answer.readOnly = true;
+            
+            // Désactiver complètement l'input sur mobile
+            answer.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+            answer.addEventListener('focus', (e) => {
+                e.preventDefault();
+                answer.blur();
+            });
+        } else {
+            answer.removeEventListener('touchstart', (e) => e.preventDefault());
+            answer.removeEventListener('focus', (e) => e.preventDefault());
+            answer.addEventListener('keyup', handleAnswer);
+            answer.readOnly = false;
+        }
+    }
+};
+
+// Initialisation au chargement du DOM
+document.addEventListener('DOMContentLoaded', () => {
+    document.body.classList.add('intro-visible');
+    let cleanup;
+    
+    const startButton = document.getElementById('start-game');
+    if (startButton) {
+        startButton.addEventListener('click', () => {
+            const introScreen = document.getElementById('intro-screen');
+            if (introScreen) {
+                introScreen.style.display = 'none';
+            }
+            
+            document.body.classList.remove('intro-visible');
+            
+            document.querySelectorAll('.game-content').forEach(el => {
+                el.style.display = 'block';
+            });
+            
+            handleDeviceInput();
+            cleanup = initNumpad();
+            initGame();
         });
-        elements.answer.readOnly = true;
-    } else {
-        // Sur desktop : permettre la saisie au clavier
-        elements.answer.addEventListener('keyup', handleAnswer);
-        elements.answer.readOnly = false;
     }
 
-    // Listener pour le redimensionnement de la fenêtre
-    window.addEventListener('resize', function() {
-        const isMobile = window.innerWidth <= 768;
-        if (isMobile) {
-            elements.answer.removeEventListener('keyup', handleAnswer);
-            elements.answer.readOnly = true;
-        } else {
-            elements.answer.addEventListener('keyup', handleAnswer);
-            elements.answer.readOnly = false;
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            handleDeviceInput();
+        }, 250);
+    });
+
+    window.addEventListener('gameRestart', () => {
+        if (typeof cleanup === 'function') {
+            cleanup();
         }
+        cleanup = initNumpad();
+        handleDeviceInput();
     });
 });
 
 
 </script>
+
+</div> <!-- Fermeture du container principal -->
+</div> <!-- Fermeture du container principal -->
+</div> <!-- Fermeture du container principal -->
+
 <?php include 'footer.php'; ?>

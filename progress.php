@@ -214,7 +214,7 @@ include 'header.php';
 
     <div class="text-center mt-4 mb-4">
         <a href="practice.php" class="btn btn-primary btn-lg">Retour à l'entraînement</a>
-        <a href="reset.php" class="btn btn-warning">Réinitialiser mes résultats</a>
+        <a href="reset.php" class="btn btn-primary btn-lg">Réinitialiser mes résultats</a>
     </div>
 </div>
 

@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <link rel="preload" href="public/css/vindigni.css?v=<?php echo time(); ?>" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <!-- Dans le head, après le lien vers vindigni.css -->
-<link rel="stylesheet" href="public/css/challenge.css">
+<link rel="stylesheet" href="public/css/challenge.css?v=<?php echo time(); ?>">
 
     <style>
         body {
