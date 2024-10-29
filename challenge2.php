@@ -220,46 +220,52 @@ include 'header.php';
                 </div>
             </div>
 
-         <!-- Contenu du jeu -->
-         <div class="game-content" style="display: none;">
-                <!-- Question et pavé numérique -->
-                <div class="question-container">
-                    <div class="question" id="question">
-                        <span id="number"></span> × <span id="multiplier"></span> = ?
-                    </div>
-                    <input type="number" id="answer" class="answer-input" readonly>
-                    <div id="numpad" class="numpad-container">
-                        <button class="num-btn" data-value="1">1</button>
-                        <button class="num-btn" data-value="2">2</button>
-                        <button class="num-btn" data-value="3">3</button>
-                        <button class="num-btn" data-value="4">4</button>
-                        <button class="num-btn" data-value="5">5</button>
-                        <button class="num-btn" data-value="6">6</button>
-                        <button class="num-btn" data-value="7">7</button>
-                        <button class="num-btn" data-value="8">8</button>
-                        <button class="num-btn" data-value="9">9</button>
-                        <button class="num-btn" data-value="0">0</button>
-                        <button class="control-btn correct-btn" id="correct">
-                            <i class="fas fa-backspace"></i>
-                        </button>
-                        <button class="control-btn validate-btn" id="validate">
-                            <i class="fas fa-check"></i>
-                        </button>
-                    </div>
-                </div>
+<!-- Contenu du jeu -->
+<div class="game-content" style="display: none;">
+    <!-- Zone question et input -->
+    <div class="question-container">
+        <div class="question" id="question">
+            <span id="number"></span> × <span id="multiplier"></span> = ?
+        </div>
+        <input type="number" id="answer" class="answer-input" readonly>
+    </div>
 
-                <!-- Stats sur mobile -->
-                <div class="game-stats-mobile">
-                    <div class="timer" id="timer">
-                        <i class="fas fa-clock"></i> 2:00
-                    </div>
-                    <div class="score-display">
-                        Score: <span id="score">0</span>
-                    </div>
-                    <div class="streak-counter">
-                        <i class="fas fa-fire"></i> Série: <span id="streak">0</span>
-                    </div>
-                </div>
+    <!-- Zone contrôles (numpad + stats) -->
+    <div class="game-controls">
+        <div id="numpad" class="numpad-container">
+        <button class="num-btn" data-value="1">1</button>
+        <button class="num-btn" data-value="2">2</button>
+        <button class="num-btn" data-value="3">3</button>
+        <button class="num-btn" data-value="4">4</button>
+        <button class="num-btn" data-value="5">5</button>
+        <button class="num-btn" data-value="6">6</button>
+        <button class="num-btn" data-value="7">7</button>
+        <button class="num-btn" data-value="8">8</button>
+        <button class="num-btn" data-value="9">9</button>
+        <button class="num-btn" data-value="0">0</button>
+        <button class="control-btn correct-btn" id="correct">
+            <i class="fas fa-backspace"></i>
+        </button>
+        <button class="control-btn validate-btn" id="validate">
+            <i class="fas fa-check"></i>
+        </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="game-stats-mobile">
+            <div class="timer" id="timer">
+                <i class="fas fa-clock"></i> 2:00
+            </div>
+            <div class="score-display">
+                Score: <span id="score">0</span>
+            </div>
+            <div class="streak-counter">
+                <i class="fas fa-fire"></i> Série: <span id="streak">0</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 
                 <!-- Dashboard (desktop seulement) -->
                 <div class="game-dashboard desktop-only">
